@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>is error</title>
+	<!-- 这里的静态资源请求url会加上req.baseUrl，所以express的静态资源路由需要修改 -->
+	<script type="text/javascript" src="lib/jquery-3.2.1.min.js"></script>
+	<script type="text/javascript" src="lib/jquery.form.min.js"></script>
+	<script type="text/javascript">
+		$(function(){
+			// $.ajax(
+			// 	{
+			// 		type: 'post',
+			// 		data:{
+			// 			post_data1: 66
+			// 		},
+			// 		headers: { Accept: "text/html"},//设置该请求头可让express的res.format输出不同数据
+			// 		url: 'http://localhost:100/?name=55',
+			// 		success: function(res){
+			// 			console.log(res);
+			// 		}
+			// 	}
+			// )
+			$('#file_form').ajaxForm({
+				url: "http://localhost:100/index",
+				type: "post",
+				beforeSubmit: function(){
+					console.log("before");
+				},
+				success: function(res){
+					console.log(res);
+				}
+			})
+		})
+	</script>
+</head>
+<body>
+这是一个测试用错误请fdsfs求展示页面
+<form id="file_form" enctype="multipart/form-data">
+	<input type="file" name="test">
+	name<input type="text" name="tesee">
+	<input type="submit" name="提交">
+</form>
+</body>
+</html>
