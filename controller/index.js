@@ -3,28 +3,87 @@
   req.method: 请求方法
   req.body: post请求；需要body-parser中间件
 */
+import { wexVerify } from './verify.js';
+import { dealMessage } from './deal_message.js';
+import { readJson } from '../lib/operation_json.js';
+import { setNewAccessToken } from './set_accessToken.js';
+import https from 'https';
+// import https from 'http';
 
-function index(req){
-	var upload=req.app.locals.middleware.multer.single('test');
-	upload(req, {}, function(err){
-		console.log(err);
-		console.log(req.file);	//文件信息
-	});
-	return {
-		'data': req.headers['x-real-ip'] ? req.headers['x-real-ip'] : req.ip.replace(/::ffff:/, '')
+function setAccessToken(req){
+	if(setNewAccessToken(req.query)){
+		return {st: 200, data:"modify success!"};
+	}else{
+		return {st: 404, data:"illlegal request!"};
 	}
 }
 
-function wexVerify(req){
-	// var echostr = req.query.echostr;
-	console.log(req);
-	return {
-		data: "fsds",
+function test(req){
+	console.log(req.body);
+	return {data:"fdsfsd"};
+}
+function test2(){
+	// var data = {'tt':'myname'};
+	// var options = {
+	// 	hostname: 'localhost',
+	// 	port: 4321,
+	// 	method: 'GET'
+	// }
+	// var post_req = https.request(options, (res)=> {
+	// 	console.log(res);
+ //        // res.on("data", (chunk)=>{
+ //        // 	console.log('fdsfs'+chunk);
+ //        // })
+ //    });
+ //    post_req.on('end', function(){
+	//      console.log("\n--->>\nresult:")
+	//    });
+    // post_req.write(data);
+
+    var data = JSON.stringify({
+	  access_token: global.official_access_token
+	});
+
+	var opt = {
+	  hostname:'api.weixin.qq.com',
+	  method: 'POST',
+	  path: '/cgi-bin/menu/create',
+	  headers: {   
+	    'Content-Type':'application/x-www-form-urlencoded',
+	    'Content-Length': data.length  
+	  } 
+	};
+
+	var req = https.request(opt, function (res) {  
+	  res.on('data', function (data) {
+	    console.log(data.toString());
+	  });
+	});
+	req.on('error', function(e) {
+	  console.log('problem with request: ' + e.message);
+	});
+	req.write(data);
+	req.end();
+ 	return {data:666};
+}
+
+function index(req){
+	var res_data = {
 		type: 'text/plain'
+	};
+	if(req.method == "GET"){
+		res_data.data = wexVerify(req.query);
+	}else if(req.method == "POST"){
+		if(wexVerify(req.query)){
+			res_data.data = dealMessage(req.body.xml);
+		}
 	}
+	return res_data;
 }
 
 module.exports = {
 	index: index,
-	wexVerify: wexVerify
+	setAccessToken: setAccessToken,
+	test: test,
+	test2: test2,
 };

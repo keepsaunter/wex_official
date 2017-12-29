@@ -8,5 +8,8 @@ module.exports = {
 	path_static_dir: 'public',	//静态文件目录
 	path_upload_file: './public/uploads',	//文件上传目录
 	//value
-	default_url_name: 'index',	//默认的控制器和操作名为index
+	default_url_name: 'index',	//默认的控制器和操作名为index,
+	official_token: '321+++Oc',
+	set_accessToken_token: '321+++Oc',
+	get_accessToken_path: './../'
 }
