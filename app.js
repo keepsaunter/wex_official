@@ -40,8 +40,10 @@ import router from './routes/router.js';
 app.use(router);
 
 //初始化access_token
-import { initAccessToken } from './controller/set_accessToken.js';
-initAccessToken();
+// import { initAccessToken } from './controller/set_accessToken.js';
+// initAccessToken();
+import Wechat from './object/wechat.js';
+new Wechat();
 
 app.listen(global.config.default_port, function(){
 	console.log("sevice on port "+global.config.default_port+"!");

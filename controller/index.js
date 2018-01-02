@@ -7,8 +7,9 @@ import { wexVerify } from './verify.js';
 import { dealMessage } from './deal_message.js';
 import { readJson } from '../lib/operation_json.js';
 import { setNewAccessToken } from './set_accessToken.js';
+import ReplyObjFac from '../object/reply_object/replyObjFac.js';
+import RecvVerifyMsg from '../object/receive_object/recvVerifyMsg.js'
 import https from 'https';
-// import https from 'http';
 
 function setAccessToken(req){
 	if(setNewAccessToken(req.query)){
@@ -23,23 +24,6 @@ function test(req){
 	return {data:"fdsfsd"};
 }
 function test2(){
-	// var data = {'tt':'myname'};
-	// var options = {
-	// 	hostname: 'localhost',
-	// 	port: 4321,
-	// 	method: 'GET'
-	// }
-	// var post_req = https.request(options, (res)=> {
-	// 	console.log(res);
- //        // res.on("data", (chunk)=>{
- //        // 	console.log('fdsfs'+chunk);
- //        // })
- //    });
- //    post_req.on('end', function(){
-	//      console.log("\n--->>\nresult:")
-	//    });
-    // post_req.write(data);
-
     var data = JSON.stringify({
 	  access_token: global.official_access_token
 	});
@@ -67,15 +51,30 @@ function test2(){
  	return {data:666};
 }
 
+// function index(req){
+// 	var res_data = {
+// 		type: 'text/plain'
+// 	};
+// 	if(req.method == "GET"){
+// 		res_data.data = wexVerify(req.query);
+// 	}else if(req.method == "POST"){
+// 		if(wexVerify(req.query)){
+// 			res_data.data = dealMessage(req.body.xml);
+// 		}
+// 	}
+// 	return res_data;
+// }
+
 function index(req){
 	var res_data = {
 		type: 'text/plain'
 	};
+
 	if(req.method == "GET"){
-		res_data.data = wexVerify(req.query);
+		res_data.data = new RecvVerifyMsg(req.query).reply();
 	}else if(req.method == "POST"){
 		if(wexVerify(req.query)){
-			res_data.data = dealMessage(req.body.xml);
+			res_data.data = new ReplyObjFac(req).reply();
 		}
 	}
 	return res_data;
