@@ -1,17 +1,20 @@
-import RecvWec from '../receive_object/recvWec.js';
-class ReplyWec extends RecvWec {
-	reply(my_id, user_id, msg_type, content, origin_msg_id){
+class ReplyWec {
+	constructor(reply_body){
+		this.my_id = reply_body.my_id;
+		this.user_id = reply_body.user_id;
+		this.type = reply_body.type;
+		this.content = reply_body.content;
+	}
+	reply(){
 		var datetime = new Date().getTime();
-		var msg_body = "";
-		if(msg_type == "text"){
-			msg_body = textMessage(content);
-		}
+		var msg_body = this.packageContent(this.content);
+
 		return `<xml>
 			<ToUserName>${this.user_id}</ToUserName>
 			<FromUserName>${this.my_id}</FromUserName>
 			<CreateTime>${datetime}</CreateTime>
-			<MsgType>${this.msg_type}</MsgType>
-			${this.msg_body}
+			<MsgType>${this.type}</MsgType>
+			${msg_body}
 		</xml>`;
 	}
 	packageContent(){}

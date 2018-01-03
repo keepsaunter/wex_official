@@ -1,10 +1,10 @@
 import ReplyTextMsg from './replyTextMsg.js';
 class ReplyObjFac {
-	constructor(req){
+	constructor(reply_body){
 		var reply_object = '';
-		console.log(req.body.xml.MsgType[0]);
-		switch(req.body.xml.MsgType[0]){
-			case 'text': reply_object = new ReplyTextMsg(req.body.xml); break;
+		switch(reply_body.type){
+			case 'text': reply_object = new ReplyTextMsg(reply_body); break;
+			default: break;
 		}
 		return reply_object;
 	}

@@ -27,7 +27,7 @@ class Wechat{
 			new_access_token: 新的access_token
     	}
     */
-	setAccessToken(params){
+	static setAccessToken(params){
 		var remote_set_token = new Buffer(params.set_accessToken_token, 'base64').toString();
 		if(remote_set_token === global.config.set_accessToken_token){
 			Wechat.access_token = new Buffer(params.new_access_token, 'base64').toString();

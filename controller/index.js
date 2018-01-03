@@ -7,12 +7,14 @@ import { wexVerify } from './verify.js';
 import { dealMessage } from './deal_message.js';
 import { readJson } from '../lib/operation_json.js';
 import { setNewAccessToken } from './set_accessToken.js';
-import ReplyObjFac from '../object/reply_object/replyObjFac.js';
-import RecvVerifyMsg from '../object/receive_object/recvVerifyMsg.js'
+
+import RecvObjFac from '../object/receive_object/recvObjFac.js';
+import Wechat from '../object/wechat.js';
+import CusMenu from '../object/send_object/cus_menu.js';
 import https from 'https';
 
 function setAccessToken(req){
-	if(setNewAccessToken(req.query)){
+	if(Wechat.setAccessToken(req.query)){
 		return {st: 200, data:"modify success!"};
 	}else{
 		return {st: 404, data:"illlegal request!"};
@@ -20,7 +22,7 @@ function setAccessToken(req){
 }
 
 function test(req){
-	console.log(req.body);
+	new CusMenu().setMenu();
 	return {data:"fdsfsd"};
 }
 function test2(){
@@ -70,13 +72,7 @@ function index(req){
 		type: 'text/plain'
 	};
 
-	if(req.method == "GET"){
-		res_data.data = new RecvVerifyMsg(req.query).reply();
-	}else if(req.method == "POST"){
-		if(wexVerify(req.query)){
-			res_data.data = new ReplyObjFac(req).reply();
-		}
-	}
+	res_data.data = new RecvObjFac(req).deal();
 	return res_data;
 }
 
