@@ -6,8 +6,9 @@ bodyParserXml(bodyParser);
 
 var app = express();
 
-// app.set('views', '/view');
-// app.set('view engine', 'html');
+//设置模板引擎
+app.set('view engine', 'jade');
+app.set('views', './view');
 //加入配置文件
 import config from './config/config.js';
 global.config = config;
@@ -40,8 +41,6 @@ import router from './routes/router.js';
 app.use(router);
 
 //初始化access_token
-// import { initAccessToken } from './controller/set_accessToken.js';
-// initAccessToken();
 import Wechat from './object/wechat.js';
 new Wechat();
 

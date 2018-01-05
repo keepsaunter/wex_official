@@ -2,22 +2,25 @@
   "button": [{
     "type": "click",
     "name": "不能点",
-    "key": "V1001_TODAY_MUSIC",
-      "sub_button": [ ]
+    "key": "V1001_TODAY_MUSIC"
   }, {
-    "name": "点不了",
-    "key": "V1001_GOODFEF",
+    "name": "菜单栏",
     "sub_button": [{
       "type": "view",
-      "name": "真点",
-      "key": "V1001_GFDSEE",
-      "url": "http://www.soso.com/",
-      "sub_button": [ ]
+      "name": "搜索",
+      "url": "http://www.soso.com/"
+    },{
+      "type": "view",
+      "name": "网上书店",
+      "url": "http://23.105.220.94:666/BookStore/index.php/Homepage/Homepage"
     }, {
       "type": "click",
-      "name": "这个",
-      "key": "V1001_GFFODFDS",
-      "sub_button": [ ]
+      "name": "赞一下我",
+      "key": "V1001_GOOD"
     }]
+  }, {
+    "type": "view",
+    "name": "网页",
+    "url": "http://23.105.220.94/jade"
   }]
 }

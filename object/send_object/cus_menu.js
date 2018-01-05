@@ -1,25 +1,28 @@
 import WecSend from './wec_send.js'
-import { readJson } from '../../lib/operation_json.js';
+import { readJson, readSync } from '../../lib/operation_json.js';
 class CusMenu extends WecSend {
 	constructor(){
 		super();
 		this.menu_conf_file = './config/cus_menu.json';
 		this.remote_path = '/cgi-bin/menu/create';
 	}
-	setMenu(){
-		readJson(this.menu_conf_file, (err, data) => {
-			if(err){
-				console.log(err);
-			}else{
-				this.send({ path: remote_path}, data, (err, data)=>{
-					if(err){
-						console.log('problem with request: ' + err.message);
+	setMenu(callback){
+		try{
+			var menu_conf = readSync(this.menu_conf_file);
+			this.send({ path: this.remote_path}, menu_conf, (err, data)=>{
+				if(err){
+					callback({st:999, data: '菜单设置失败,'+err.message});
+				}else{
+					if(data.errcode == 0 && data.errmsg=='ok'){
+						callback('菜单设置成功!');
 					}else{
-						console.log(data.toString());
+						callback({st:999, data: data});
 					}
-				})
-			}
-		})
+				}
+			})
+		}catch(e){
+			// console.log(e);
+		}
 	}
 }
 export default CusMenu;

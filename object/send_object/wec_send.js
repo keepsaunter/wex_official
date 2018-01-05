@@ -10,16 +10,17 @@ class WecSend extends Wechat {
 		  method: 'POST',
 		  path: '',
 		  headers: {   
-		    'Content-Type':'application/x-www-form-urlencoded',
-		    'Content-Length': data.length
+		    'Content-Type':'application/json',
+		    'Content-Length': Buffer.byteLength(data)
 		  } 
 		}, option);
 		opt.path += '?access_token='+WecSend.access_token;
 
-		var req = https.request(opt, function (res) {  
-		  res.on('data', function (data) {
-		  	callback("", data);
-		  });
+		var req = https.request(opt, function(res) {
+			res.setEncoding('utf8');
+			res.on('data', function(data) {
+				callback("", JSON.parse(data));
+			});
 		});
 		req.on('error', function(e) {
 			callback(e, "");

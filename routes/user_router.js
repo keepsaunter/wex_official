@@ -3,7 +3,10 @@ var user_router = express.Router();
 
 //引入数据处理(控制器)模块
 var controllers = {
-	index_router: require('../controller/index.js')
+	indexController: require('../controller/index.js')['default'],
+	confController: require('../controller/conf.js')['default'],
+	errorController: require('../controller/error.js')['default'],
+	jadeController: require('../controller/jade.js')['default'],
 }
 
 user_router.use(function(req, res, next){
@@ -26,22 +29,21 @@ user_router.use(function(req, res, next){
 		  这里不能对/url/:id的请求使用req.params获取参数；
 		*/
 		//将结果给res.locals.data变量做临时保存
+		
 		if(controll_paths[1] !== "favicon.ico"){
-			res.locals.data = controllers[controll_paths[1]+"_router"][controll_paths[2]](req, res);
+			new controllers[controll_paths[1]+"Controller"](req, res, next)[controll_paths[2]]();
 		}else{
-			res.locals.data = {
-				st: 404
-			}
+			new controllers['errorController'](req, res, next).err(200);
 		}
 	}catch(e){
 		// console.log(e);
 		//调用失败返回404错误；
-		console.log(e);
-		res.locals.data = {
-			st: 404
+		if(controllers[controll_paths[1]+"Controller"]){
+			new controllers['errorController'](req, res, next).err(405);
+		}else{
+			new controllers['errorController'](req, res, next).err(404);
 		}
 	}
-	next();
 });
 
 module.exports = user_router;
