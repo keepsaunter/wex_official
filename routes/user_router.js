@@ -7,6 +7,7 @@ var controllers = {
 	confController: require('../controller/conf.js')['default'],
 	errorController: require('../controller/error.js')['default'],
 	jadeController: require('../controller/jade.js')['default'],
+	userController: require('../controller/user.js')['default'],
 }
 
 user_router.use(function(req, res, next){
@@ -37,7 +38,7 @@ user_router.use(function(req, res, next){
 		}
 	}catch(e){
 		// console.log(e);
-		//调用失败返回404错误；
+		//调用失败返回404错误;
 		if(controllers[controll_paths[1]+"Controller"]){
 			new controllers['errorController'](req, res, next).err(405);
 		}else{

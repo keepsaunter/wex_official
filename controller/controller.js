@@ -29,8 +29,8 @@ class Controller {
 		}
 		this.next();
 	}
-	render(modal_name){
-		this.res.render(modal_name);
+	render(modal_name, data){
+		data ? this.res.render(modal_name, data) : this.res.render(modal_name);
 	}
 }
 export default Controller;

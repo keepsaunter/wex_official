@@ -26,7 +26,7 @@ app.locals.middleware.multer = multer;
 
 //托管静态资源，可同时声明多个
 app.use(express.static(global.config.path_static_dir));
-app.use('/index', express.static(global.config.path_static_dir)); //当请求静态资源的路径不是域名根路径时
+// app.use('/js', express.static(global.config.path_static_dir)); //当请求静态资源的路径不是域名根路径时
 
 /*使用cors(中间件)实现跨域请求
   html文件和node服务不在同一个端口下，
