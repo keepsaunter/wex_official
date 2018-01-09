@@ -1,7 +1,8 @@
 import Controller from './controller.js';
 class JadeController extends Controller {
 	index(){
-		this.render('index',{name:'ouch<b>ao</b>'});
+		// this.res.redirect('/user/wexAuth');
+		this.res.render('index',{name:'ouchao'});
 	}
 }
 export default JadeController;

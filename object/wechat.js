@@ -1,6 +1,7 @@
 import { readJson } from '../lib/operation_json.js';
 class Wechat {
 	static access_token = "";
+	static jsapi_ticket = "";
 	static app_id = "";
 	static app_secret = "";
 	static set_accessToken_token = "";
@@ -23,6 +24,7 @@ class Wechat {
 				console.log(err);
 			}else{
 				Wechat.access_token = data.access_token;
+				Wechat.jsapi_ticket = data.ticket;
 			}
 		});
 		readJson(get_accessToken_path + Wechat.wex_conf_file, (err, data)=>{
@@ -39,14 +41,16 @@ class Wechat {
     /*设置access_token
     	params{
 			set_accessToken_token: 合法口令,
-			new_access_token: 新的access_token
+			new_data: 新的数据{access_token: , ticket:}
     	}
     */
 	static setAccessToken(params){
 		try{
 			var remote_set_token = new Buffer(params.set_accessToken_token, 'base64').toString();
 			if(remote_set_token === global.config.set_accessToken_token){
-				Wechat.access_token = new Buffer(params.new_access_token, 'base64').toString();
+				var new_data = JSON.parse(new Buffer(params.new_data, 'base64').toString());
+				Wechat.access_token = new_data.access_token;
+				Wechat.jsapi_ticket = new_data.ticket;
 				return true;
 			}else{
 				return false;

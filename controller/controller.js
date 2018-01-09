@@ -1,3 +1,4 @@
+import Wechat from '../object/wechat.js';
 class Controller {
 	constructor(req, res, next){
 		this.req = req;
@@ -31,6 +32,16 @@ class Controller {
 	}
 	render(modal_name, data){
 		data ? this.res.render(modal_name, data) : this.res.render(modal_name);
+	}
+	renderSdk(modal_name, data){
+		data.sdk_data = {
+			debug: true,
+		    appId: Wechat.app_id,
+		    timestamp: Date.now(),
+		    nonceStr: '',
+		    signature: '',
+		    jsApiList: []
+		}
 	}
 }
 export default Controller;
