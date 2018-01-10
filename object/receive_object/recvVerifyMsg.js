@@ -4,8 +4,8 @@ class RecvVerifyMsg extends RecvGetWec {
 		super(req_query);
 		this.echostr = req_query.echostr;
 	}
-	deal(){
-		return this.wexVerify();
+	deal(callback){
+		callback(this.wexVerify());
 	}
 }
 export default RecvVerifyMsg;

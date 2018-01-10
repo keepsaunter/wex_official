@@ -5,8 +5,8 @@ class RecvTextMsg extends RecvPostWec {
 		this.origin_msg_id = msg_body.MsgId[0];
 		this.content = msg_body.Content[0];
 	}
-	deal(){
-		return this.getReplyBody('text', '你的消息是\r\n'+this.content);
+	deal(callback){
+		callback(this.getReplyBody('text', '你的消息是\r\n'+this.content));
 	}
 }
 export default RecvTextMsg;

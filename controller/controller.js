@@ -35,7 +35,7 @@ class Controller {
 	render(modal_name, data){
 		data ? this.res.render(modal_name, data) : this.res.render(modal_name);
 	}
-	renderSdk(modal_name, data){
+	renderSdk(modal_name, data, jsApiList){
 		var timestamp = Date.now();
 		var noncestr = createRandomChart();
 		var jsapi_ticket = Wechat.jsapi_ticket;
@@ -43,15 +43,7 @@ class Controller {
 		var host = this.req.headers.host;
 		var url = ((/^https:\/\//).test(host)?host:"http://"+host) +this.req.originalUrl;
 
-		var sign_obj = [
-			{n: 'timestamp', v: timestamp},
-			{n: 'noncestr', v: noncestr},
-			{n: 'jsapi_ticket', v: jsapi_ticket},
-			{n: 'url', v: url},
-		];
-		var string1 = sign_obj.sort(function(a,b){
-			return a.v > b.v;
-		}).reduce(function(str, item){return str+"&"+item.n+"="+item.v}, '').substr(1);
+		var string1 = ['timestamp='+timestamp,'noncestr='+noncestr, 'jsapi_ticket='+jsapi_ticket, 'url='+url].sort().join('&');
 
 		var hex_sha1 = crypto.createHash('sha1');
 		hex_sha1.update(string1);
@@ -63,7 +55,7 @@ class Controller {
 		    timestamp: timestamp,
 		    nonceStr: noncestr,
 		    signature: signature,
-		    jsApiList: []
+		    jsApiList: jsApiList?jsApiList:[]
 		})).replace(/"/g, "'");
 
 		this.render(modal_name, data);
