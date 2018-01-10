@@ -1,3 +1,5 @@
+script(src='http://res.wx.qq.com/open/js/jweixin-1.2.0.js')
 script.
-	alert('#{name}');
+	wx.config(#{sdk_data});
+	wx.error(function(err){console.error(err);})
 include c_head

@@ -1,4 +1,6 @@
 import Wechat from '../object/wechat.js';
+import { createRandomChart } from '../lib/lib.js';
+import crypto from 'crypto';
 class Controller {
 	constructor(req, res, next){
 		this.req = req;
@@ -34,14 +36,37 @@ class Controller {
 		data ? this.res.render(modal_name, data) : this.res.render(modal_name);
 	}
 	renderSdk(modal_name, data){
-		data.sdk_data = {
-			debug: true,
+		var timestamp = Date.now();
+		var noncestr = createRandomChart();
+		var jsapi_ticket = Wechat.jsapi_ticket;
+
+		var host = this.req.headers.host;
+		var url = ((/^https:\/\//).test(host)?host:"http://"+host) +this.req.originalUrl;
+
+		var sign_obj = [
+			{n: 'timestamp', v: timestamp},
+			{n: 'noncestr', v: noncestr},
+			{n: 'jsapi_ticket', v: jsapi_ticket},
+			{n: 'url', v: url},
+		];
+		var string1 = sign_obj.sort(function(a,b){
+			return a.v > b.v;
+		}).reduce(function(str, item){return str+"&"+item.n+"="+item.v}, '').substr(1);
+
+		var hex_sha1 = crypto.createHash('sha1');
+		hex_sha1.update(string1);
+		var signature = hex_sha1.digest('hex');
+
+		data.sdk_data = (JSON.stringify({
+			debug: false,
 		    appId: Wechat.app_id,
-		    timestamp: Date.now(),
-		    nonceStr: '',
-		    signature: '',
+		    timestamp: timestamp,
+		    nonceStr: noncestr,
+		    signature: signature,
 		    jsApiList: []
-		}
+		})).replace(/"/g, "'");
+
+		this.render(modal_name, data);
 	}
 }
 export default Controller;
