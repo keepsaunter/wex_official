@@ -5,7 +5,7 @@ class WexUser {
 		this.open_id = open_id;
 	}
 	getUserBase(callback){
-		var http_req = new MyHttp({url:'https://api.weixin.qq.com/cgi-bin/user/info?access_token='+Wechat.access_token+'&openid='+this.openid+'&lang=zh_CN'})
+		var http_req = new MyHttp({url:'https://api.weixin.qq.com/cgi-bin/user/info?access_token='+Wechat.access_token+'&openid='+this.open_id+'&lang=zh_CN'})
 		.get((err, data) =>{
 			if(err){
 				callback(err);
