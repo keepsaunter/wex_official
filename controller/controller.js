@@ -24,10 +24,7 @@ class Controller {
 				this.res.json(resp);
 			}else{
 				//对错误的请求做处理
-				switch(data.st){
-					case 404: this.res.sendFile('G:/SmallSoftware/wex_official/view/index.html');break;
-					default: this.res.sendStatus(data.st);break;
-				}
+				this.err(data.st);
 			}
 		}
 		this.next();
@@ -59,6 +56,13 @@ class Controller {
 		})).replace(/"/g, "'");
 
 		this.render(modal_name, data);
+	}
+	err(code){
+		switch(code){
+			case 200: this.resp({st:200, data:''});break;
+			case 404: this.render('error');break;
+			default: this.resp({st:code, data:'error'});break;
+		}
 	}
 }
 export default Controller;

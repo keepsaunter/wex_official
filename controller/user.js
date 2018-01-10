@@ -12,7 +12,7 @@ class UserController extends Controller {
 		this.res.redirect("https://open.weixin.qq.com/connect/oauth2/authorize?appid="+Wechat.app_id+"&redirect_uri="+encodeURIComponent("http://"+this.req.headers.host+"/user/getInfo")+"&response_type=code&scope=snsapi_userinfo&state="+sign_data+"|"+datatime+"#wechat_redirect");
 	}
 	getInfo(){
-		new WebUser().getWebUser(this.req.query.code, (err, data) => {
+		new WebUser().getUser(this.req.query.code, (err, data) => {
 			if(err){
 				console.log(err);
 			}else{

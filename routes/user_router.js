@@ -38,7 +38,7 @@ user_router.use(function(req, res, next){
 			new controllers['errorController'](req, res, next).err(200);
 		}
 	}catch(e){
-		console.log(e);
+		// console.log(e);
 		//调用失败返回404错误;
 		if(controllers[controll_paths[1]+"Controller"]){
 			new controllers['errorController'](req, res, next).err(405);
