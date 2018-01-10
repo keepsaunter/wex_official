@@ -3,3 +3,4 @@
 /dist/
 /log/
 /config/config.js
+npm-debug.log.*

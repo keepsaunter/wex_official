@@ -19,8 +19,15 @@
       "key": "V1001_GOOD"
     }]
   }, {
-    "type": "view",
     "name": "网页",
-    "url": "http://23.105.220.94/jade"
+    "sub_button": [{
+      "type": "view",
+      "name": "jssdk",
+      "url": "http://23.105.220.94/jade"
+    },{
+      "type": "view",
+      "name": "web auth",
+      "url": "http://23.105.220.94/jade/auth"
+    }]
   }]
 }
