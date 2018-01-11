@@ -7,7 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon app.js --exec babel-node",
     "debug": "nodemon --inspect app.js --exec babel-node",
-    "build": "babel app.js -o ./dist/build.app.js"
+    "build": "babel app.js -o ./dist/build.app.js",
+    "online": "forever start -a --uid wexofficial -l /home/wwwroot/default/forever_log/wex_official/log.log -o /home/wwwroot/default/forever_log/wex_official/cons.log -e /home/wwwroot/default/forever_log/wex_official/error.log -c 'nodemon --exitcrash --exec babel-node' app.js"
   },
   "author": "",
   "license": "ISC",
