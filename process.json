@@ -1,0 +1,10 @@
+{
+  "apps": [{
+        "node_args": "start",
+        "name": "wex_official",
+        "script": "app.js",
+        "out_file": "./pm2_log.log",
+        "watch": false,
+        "exec_interpreter": "npm"
+  }]
+}
