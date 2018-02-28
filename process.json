@@ -4,7 +4,7 @@
         "name": "wex_official",
         "script": "app.js",
         "out_file": "./pm2_log.log",
-        "watch": false,
+        "watch": true,
         "exec_interpreter": "npm"
   }]
 }

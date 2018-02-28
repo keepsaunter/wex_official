@@ -9,6 +9,7 @@ var controllers = {
 	jadeController: require('../controller/jade.js')['default'],
 	userController: require('../controller/user.js')['default'],
 	authjadeController: require('../controller/authjade.js')['default'],
+	ssapiController: require('../controller/ssapi.js')['default'],
 }
 
 user_router.use(function(req, res, next){
@@ -33,7 +34,12 @@ user_router.use(function(req, res, next){
 		//将结果给res.locals.data变量做临时保存
 		
 		if(controll_paths[1] !== "favicon.ico"){
-			new controllers[controll_paths[1]+"Controller"](req, res, next)[controll_paths[2]]();
+			var t_controller = new controllers[controll_paths[1]+"Controller"](req, res, next);
+			if(t_controller && t_controller[controll_paths[2]]){
+				t_controller[controll_paths[2]]();
+			}else{
+				new controllers['errorController'](req, res, next).err(404);
+			}
 		}else{
 			new controllers['errorController'](req, res, next).err(200);
 		}
