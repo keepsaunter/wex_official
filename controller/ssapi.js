@@ -17,6 +17,13 @@ class SsapiController extends Controller {
 			}
 		});
 	}
+	test(){
+		var mysqldb = new Mysqldb({database: this.config.database});
+		mysqldb.select('slideshow', (e,r,f) => {
+			console.log(r);
+		})
+			this.resp('r');
+	}
 	login(){
 		var self = this;
 		var t_config = self.config;
