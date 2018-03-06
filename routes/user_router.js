@@ -25,32 +25,33 @@ user_router.use(function(req, res, next){
 	var default_path = global.config.default_url_name;
 	controll_paths?(controll_paths[1]?(controll_paths[2]?'':controll_paths[2]=default_path):controll_paths[1]=controll_paths[2]=default_path):controll_paths[1]=controll_paths[2]=default_path;
 
-	try{
-		/*用eval来将字符串作为对象名调用；
-		  可以用(function(funname){return funname();})(name)的方式实现；
-		  但感觉这样更简洁，eval应该有其他影响；
-		  这里不能对/url/:id的请求使用req.params获取参数；
-		*/
-		//将结果给res.locals.data变量做临时保存
+	/*用eval来将字符串作为对象名调用；
+	  可以用(function(funname){return funname();})(name)的方式实现；
+	  但感觉这样更简洁，eval应该有其他影响；
+	  这里不能对/url/:id的请求使用req.params获取参数；
+	*/
+	//将结果给res.locals.data变量做临时保存
 		
-		if(controll_paths[1] !== "favicon.ico"){
-			var t_controller = new controllers[controll_paths[1]+"Controller"](req, res, next);
+	if(controll_paths[1] !== "favicon.ico"){
+		var controller_name = controll_paths[1]+"Controller";
+		if(controllers && controllers[controller_name]){
+			var t_controller = new controllers[controller_name](req, res, next);
 			if(t_controller && t_controller[controll_paths[2]]){
-				t_controller[controll_paths[2]]();
+				try{
+					t_controller[controll_paths[2]]();
+				}catch(e){
+					console.log(e);
+					//调用失败返回404错误;
+					new controllers['errorController'](req, res, next).err(405);
+				}
 			}else{
 				new controllers['errorController'](req, res, next).err(404);
 			}
 		}else{
-			new controllers['errorController'](req, res, next).err(200);
-		}
-	}catch(e){
-		// console.log(e);
-		//调用失败返回404错误;
-		if(controllers[controll_paths[1]+"Controller"]){
-			new controllers['errorController'](req, res, next).err(405);
-		}else{
 			new controllers['errorController'](req, res, next).err(404);
 		}
+	}else{
+		new controllers['errorController'](req, res, next).err(200);
 	}
 });
 

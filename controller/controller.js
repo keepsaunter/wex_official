@@ -24,7 +24,11 @@ class Controller {
 				this.res.json(resp);
 			}else{
 				//对错误的请求做处理
-				this.err(data.st);
+				switch(code){
+					case 200: this.res.json({st:200});break;
+					case 404: this.render('error');break;
+					default: this.res.json({st:code, data:'error'});break;
+				}
 			}
 		}
 		this.next();
@@ -58,11 +62,7 @@ class Controller {
 		this.render(modal_name, data);
 	}
 	err(code){
-		switch(code){
-			case 200: this.resp({st:200, data:''});break;
-			case 404: this.render('error');break;
-			default: this.resp({st:code, data:'error'});break;
-		}
+		this.resp({st: code});
 	}
 }
 export default Controller;
