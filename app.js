@@ -18,7 +18,7 @@ app.locals.middleware = [];
 
 //填充post请求数据
 app.use(bodyParser.json());
-// app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.xml());
 //将文件上传中间件放到app中
 import multer from './lib/multerUtil.js';

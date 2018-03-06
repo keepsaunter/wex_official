@@ -9,7 +9,7 @@ class Controller {
 	}
 	resp(data){
 		if(data){
-			if(!data.data){
+			if(!data.data && !data.st){
 				data={data: data};
 			}
 			if(data.type == "text/plain"){

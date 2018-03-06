@@ -1,5 +1,6 @@
 import Controller from './controller.js';
 import Mysqldb from '../lib/mysqldb.js';
+import { createRandomChart } from '../lib/lib.js';
 import SsConfig from '../config/smallsw.js';
 import MyHttp from '../object/my_http.js';
 class SsapiController extends Controller {
@@ -27,55 +28,71 @@ class SsapiController extends Controller {
 	login(){
 		var self = this;
 		var t_config = self.config;
-		// var code = this.req.body.code;
-		var mysqldb = new Mysqldb({database: t_config.database});
-		var temp_user_info = {
-      nickName: '--',
-      avatarUrl: 'fdsfdsfd',
-      province: 'temp_userInfo.province',
-      gender: '1',
-      login_time: Mysqldb.getDatetime()
-    };
-    console.log(mysqldb.update('user', temp_user_info, '', `openid="${temp_user_info.openid}"`));
-    new MyHttp({url:`https://api.weixin.qq.com/sns/jscode2session?appid=${t_config.app_id}&secret=${t_config.app_secret}&js_code=${t_code}&grant_type=authorization_code`}).get(
-			(e, data) => {
-				if(!e){
-					if(!data.errcode && data.openid){
+		var temp_data = this.req.body;
+		var t_code = temp_data.code;
+		var t_user_id = temp_data.user_id;
+
+		if(t_code || t_user_id){
+			var temp_user_info = {
+	      nickName: temp_data.nickName||'',
+	      avatarUrl: temp_data.avatarUrl||'',
+	      province: temp_data.province||'',
+	      gender: temp_data.gender||0,
+	      login_time: Mysqldb.getDatetime()
+	    };
+	    var mysqldb = new Mysqldb({database: t_config.database});
+	    if(t_code){
+	    	new MyHttp({url:`https://api.weixin.qq.com/sns/jscode2session?appid=${t_config.app_id}&secret=${t_config.app_secret}&js_code=${t_code}&grant_type=authorization_code`}).get(
+				(e, data) => {
+					data = JSON.parse(data);
+					if(!e && !data.errcode && data.openid){
 						var temp_openid = data.openid;
-						mysqldb.get('user', 'register_time',`openid="${temp_openid}"`, (e,r,f) => {
+						mysqldb.get('user', 'user_id',`openid="${temp_openid}"`, (e,r,f) => {
 				    	if(!e){
 				    		if(r.length){
 				    			if(mysqldb.update('user', temp_user_info, '', `openid="${temp_openid}"`,(e,r,f) => {
 				    				if(e){
-				    					self.resp({st: 999});
+				    					self.resp({st: 999, msg:e});
 				    				}else{
-				    					self.resp({st: 200});
+				    					self.resp({st: 200, id: r.user_id});
 				    				}
 				    			}) == false){
-				    				self.resp({st: 999});
+				    				self.resp({st: 999, msg:e});
 				    			}
 				    		}else{
 				    			temp_user_info.openid = temp_openid;
 				    			temp_user_info.register_time = temp_user_info.login_time;
+				    			temp_user_info.user_id = createRandomChart(8)+(Date.now()+'').slice(-8);
 				    			if(mysqldb.insert('user', temp_user_info, (e,r,f) => {
 				    				if(e){
-				    					self.resp({st: 999});
+				    					self.resp({st: 999, msg:e});
 				    				}else{
-				    					self.resp({st: 200});
+				    					self.resp({st: 200, id: temp_user_info.user_id});
 				    				}
 				    			}) == false){
-				    				self.resp({st: 999});
+				    				self.resp({st: 999, msg:e});
 				    			}
 				    		}
 				    	}else{
-								self.resp({st: 999});
+								self.resp({st: 999, msg:e});
 							}
 				    })
 					}
-				}
-			}
-		)
-		// var t_code = '013lYKYH0CPbXg2WdFYH0y6OYH0lYKYh';
+				})
+	    }else{
+	    	if(mysqldb.update('user', temp_user_info, '', `user_id="${t_user_id}"`,(e,r,f) => {
+  				if(e){
+  					self.resp({st: 999, msg:e});
+  				}else{
+  					self.resp({st: 200, id: r.user_id});
+  				}
+  			}) == false){
+  				self.resp({st: 999, msg:e});
+  			}
+	    }
+		}else{
+			self.resp({st: 999, msg:'illegal request'});
+		}
 	}
 }
 export default SsapiController;
