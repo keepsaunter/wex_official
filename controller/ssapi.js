@@ -47,14 +47,14 @@ class SsapiController extends Controller {
 					data = JSON.parse(data);
 					if(!e && !data.errcode && data.openid){
 						var temp_openid = data.openid;
-						mysqldb.get('user', 'user_id',`openid="${temp_openid}"`, (e,r,f) => {
+						mysqldb.get('user', 'user_id',`openid="${temp_openid}"`, (e,origin_data,f) => {
 				    	if(!e){
-				    		if(r.length){
+				    		if(origin_data.length){
 				    			if(mysqldb.update('user', temp_user_info, '', `openid="${temp_openid}"`,(e,r,f) => {
 				    				if(e){
 				    					self.resp({st: 999, msg:e});
 				    				}else{
-				    					self.resp({st: 200, id: r.user_id});
+				    					self.resp({st: 200, id: origin_data.user_id});
 				    				}
 				    			}) == false){
 				    				self.resp({st: 999, msg:e});
@@ -67,6 +67,7 @@ class SsapiController extends Controller {
 				    				if(e){
 				    					self.resp({st: 999, msg:e});
 				    				}else{
+				    					console.log(1);
 				    					self.resp({st: 200, id: temp_user_info.user_id});
 				    				}
 				    			}) == false){
@@ -84,6 +85,7 @@ class SsapiController extends Controller {
   				if(e){
   					self.resp({st: 999, msg:e});
   				}else{
+  					console.log(2);
   					self.resp({st: 200, id: r.user_id});
   				}
   			}) == false){
