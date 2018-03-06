@@ -54,7 +54,7 @@ class SsapiController extends Controller {
 				    				if(e){
 				    					self.resp({st: 999, msg:e});
 				    				}else{
-				    					self.resp({st: 200, id: origin_data.user_id});
+				    					self.resp({st: 200, data: {user_id: origin_data[0].user_id}});
 				    				}
 				    			}) == false){
 				    				self.resp({st: 999, msg:e});
@@ -67,8 +67,7 @@ class SsapiController extends Controller {
 				    				if(e){
 				    					self.resp({st: 999, msg:e});
 				    				}else{
-				    					console.log(1);
-				    					self.resp({st: 200, id: temp_user_info.user_id});
+				    					self.resp({st: 200, data: {user_id: temp_user_info.user_id}});
 				    				}
 				    			}) == false){
 				    				self.resp({st: 999, msg:e});
@@ -85,8 +84,7 @@ class SsapiController extends Controller {
   				if(e){
   					self.resp({st: 999, msg:e});
   				}else{
-  					console.log(2);
-  					self.resp({st: 200, id: r.user_id});
+  					self.resp({st: 200, data: {user_id: t_user_id}});
   				}
   			}) == false){
   				self.resp({st: 999, msg:e});
