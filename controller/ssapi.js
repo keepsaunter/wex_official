@@ -25,6 +25,13 @@ class SsapiController extends Controller {
 		})
 			this.resp('r');
 	}
+	collect(){
+		var temp_data = this.req.body;
+		if(temp_data.user_id && temp_data.goods_id && temp_data.site_type){
+			var mysqldb = new Mysqldb({database: t_config.database});
+			// mysqldb.get(user)
+		}
+	}
 	login(){
 		var self = this;
 		var t_config = self.config;
