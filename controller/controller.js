@@ -17,7 +17,7 @@ class Controller {
 				this.res.send(data.data);
 			}else if(data.st===undefined || data.st==200 || data.st==999){
 				var resp = {
-					ms: data.ms?data.ms:'',
+					msg: data.msg||data.ms||'',
 					st: data.st?data.st: 200,
 					data: data.data?data.data:''
 				}
