@@ -29,8 +29,19 @@ class SsapiController extends Controller {
 		var temp_user_id = this.req.query.user_id;
 		var temp_page = this.req.query.page||1;
 		if(temp_user_id){
+			var page_length = 6;
 			var mysqldb = new Mysqldb({database: this.config.database});
-			// mysqldb.select
+			var self = this;
+			var fields_str = 'goods_id,goods_img,goods_name,goods_intro,goods_sale_num,quan_end_time,quan_price,price,quan_after_price,site_type';
+			if(mysqldb.query(`SELECT ${fields_str} FROM collect WHERE user_id="${temp_user_id}" ORDER BY collect_time desc LIMIT ${(temp_page-1)*page_length}, ${page_length}`, (e,r) =>{
+				if(e){
+					self.resp({st: 999, msg:e});
+				}else{
+					self.resp({st: 200, data:r});
+				}
+			}) == false){
+				self.resp({st: 999});
+			}
 		}
 	}
 	isCollected(){
