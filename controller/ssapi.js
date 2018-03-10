@@ -34,7 +34,6 @@ class SsapiController extends Controller {
 			var self = this;
 			var fields_str = 'goods_id,goods_img,goods_name,goods_intro,goods_sale_num,date_format(quan_end_time+"", "%Y-%m-%d %H:%m:%S") as quan_end_time,quan_price,price,quan_after_price,site_type';
 			if(mysqldb.query(`SELECT ${fields_str} FROM collect WHERE user_id="${temp_user_id}" ORDER BY collect_time desc LIMIT ${(temp_page-1)*page_length}, ${page_length}`, (e,r) =>{
-				console.log(r[0]);
 				if(e){
 					self.resp({st: 999, msg:e});
 				}else{
