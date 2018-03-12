@@ -43,8 +43,12 @@ class MyHttp {
 	get(callback){
 		var req = this.module.get(this.url, (res)=> {
 			res.setEncoding(this.charset);
+			var t_data = '';
 		    res.on("data", (data)=>{
-		    	callback("", data);
+		    	t_data += data
+		    })
+		    res.on('end', ()=>{
+		    	callback("", t_data);
 		    })
 		})
 		req.on('error', function(e) {
