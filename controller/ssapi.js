@@ -82,6 +82,25 @@ class SsapiController extends Controller {
 			}
 		}
 	}
+	getQuanRecord(){
+		var temp_user_id = this.req.query.user_id;
+		var temp_page = this.req.query.page||1;
+		if(temp_user_id){
+			var page_length = 6;
+			var mysqldb = new Mysqldb({database: this.config.database});
+			var self = this;
+			var fields_str = 'goods_id,goods_img,goods_name,goods_intro,goods_sale_num,date_format(quan_end_time+"", "%Y-%m-%d %H:%m:%S") as quan_end_time,quan_price,price,quan_after_price,site_type,date_format(record_time+"", "%Y-%m-%d %H:%m:%S") as record_time';
+			if(mysqldb.query(`SELECT ${fields_str} FROM collect WHERE user_id="${temp_user_id}" ORDER BY collect_time desc LIMIT ${(temp_page-1)*page_length}, ${page_length}`, (e,r) =>{
+				if(e){
+					self.resp({st: 999, msg:e});
+				}else{
+					self.resp({st: 200, data:r});
+				}
+			}) == false){
+				self.resp({st: 999});
+			}
+		}
+	}
 	isCollected(){
 		var temp_data = this.req.query;
 		if(temp_data.user_id && temp_data.goods_id && temp_data.site_type){
@@ -153,6 +172,59 @@ class SsapiController extends Controller {
 			}, () => {
 				self.resp([]);
 			})
+		}
+	}
+	delQuanRecord(){
+		var temp_data = this.req.body;
+		if(temp_data.user_id && temp_data.goods_id && temp_data.site_type){
+		var mysqldb = new Mysqldb({database: this.config.database});
+		var self = this;
+		if(mysqldb.delete('quan_record', `user_id="${temp_data.user_id}" and goods_id="${temp_data.goods_id}" and site_type="${temp_data.site_type}"`, (e,r) =>{
+			if(e){
+				self.resp({st: 999, msg:e});
+			}else{
+				self.resp({st: 200, msg:'成功删除！', data:{is_collected: 0}});
+			}
+		}) == false){
+			self.resp({st: 999});
+		}
+	}
+	quanRecord(){
+		var temp_data = this.req.body;
+		if(temp_data.user_id && temp_data.goods_id && temp_data.site_type){
+			var mysqldb = new Mysqldb({database: this.config.database});
+			var self = this;
+			var temp_time_now = Mysqldb.getDatetime();
+			mysqldb.get('quan_record', 'goods_id', `user_id="${temp_data.user_id}" and goods_id="${temp_data.goods_id}" and site_type="${temp_data.site_type}"`,(e, r) => {
+				if(!e){
+					if(!r.length){
+						temp_data.record_time = temp_time_now;
+						if(mysqldb.insert('quan_record', temp_data, (e,r) => {
+	    				if(e){
+	    					self.resp({st: 999, msg:e});
+	    				}else{
+	    					self.resp({st: 200, msg:'成功加入！', data:{is_collected: 1}});
+	    				}
+	    			}) == false){
+	    				self.resp({st: 999});
+	    			}
+					}else{
+						if(mysqldb.update('quan_record', {record_time:temp_time_now}, '', `user_id="${temp_data.user_id}" and goods_id="${temp_data.goods_id}" and site_type="${temp_data.site_type}"`, (e,r) =>{
+	    				if(e){
+	    					self.resp({st: 999, msg:e});
+	    				}else{
+	    					self.resp({st: 200, msg:'成功加入！', data:{is_collected: 0}});
+	    				}
+	    			}) == false){
+	    				self.resp({st: 999});
+	    			}
+					}
+				}else{
+					self.resp({st: 999, msg:e});
+				}
+			})
+		}else{
+			this.resp({st: 999});
 		}
 	}
 	collect(){
