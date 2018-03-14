@@ -80,6 +80,8 @@ class SsapiController extends Controller {
 			}) == false){
 				self.resp({st: 999});
 			}
+		}else{
+			this.resp({st: 999, msg:'未登录'});
 		}
 	}
 	getQuanRecord(){
@@ -90,7 +92,7 @@ class SsapiController extends Controller {
 			var mysqldb = new Mysqldb({database: this.config.database});
 			var self = this;
 			var fields_str = 'goods_id,goods_img,goods_name,goods_intro,goods_sale_num,date_format(quan_end_time+"", "%Y-%m-%d %H:%m:%S") as quan_end_time,quan_price,price,quan_after_price,site_type,date_format(record_time+"", "%Y-%m-%d %H:%m:%S") as record_time';
-			if(mysqldb.query(`SELECT ${fields_str} FROM collect WHERE user_id="${temp_user_id}" ORDER BY collect_time desc LIMIT ${(temp_page-1)*page_length}, ${page_length}`, (e,r) =>{
+			if(mysqldb.query(`SELECT ${fields_str} FROM quan_record WHERE user_id="${temp_user_id}" ORDER BY record_time desc LIMIT ${(temp_page-1)*page_length}, ${page_length}`, (e,r) =>{
 				if(e){
 					self.resp({st: 999, msg:e});
 				}else{
@@ -99,6 +101,8 @@ class SsapiController extends Controller {
 			}) == false){
 				self.resp({st: 999});
 			}
+		}else{
+			this.resp({st: 999, msg:'未登录'});
 		}
 	}
 	isCollected(){
@@ -177,16 +181,19 @@ class SsapiController extends Controller {
 	delQuanRecord(){
 		var temp_data = this.req.body;
 		if(temp_data.user_id && temp_data.goods_id && temp_data.site_type){
-		var mysqldb = new Mysqldb({database: this.config.database});
-		var self = this;
-		if(mysqldb.delete('quan_record', `user_id="${temp_data.user_id}" and goods_id="${temp_data.goods_id}" and site_type="${temp_data.site_type}"`, (e,r) =>{
-			if(e){
-				self.resp({st: 999, msg:e});
-			}else{
-				self.resp({st: 200, msg:'成功删除！', data:{is_collected: 0}});
+			var mysqldb = new Mysqldb({database: this.config.database});
+			var self = this;
+			if(mysqldb.delete('quan_record', `user_id="${temp_data.user_id}" and goods_id="${temp_data.goods_id}" and site_type="${temp_data.site_type}"`, (e,r) =>{
+				if(e){
+					self.resp({st: 999, msg:e});
+				}else{
+					self.resp({st: 200, msg:'成功删除！', data:{is_collected: 0}});
+				}
+			}) == false){
+				self.resp({st: 999});
 			}
-		}) == false){
-			self.resp({st: 999});
+		}else{
+			this.resp({st: 999});
 		}
 	}
 	quanRecord(){
