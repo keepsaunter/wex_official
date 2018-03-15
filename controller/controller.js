@@ -24,10 +24,10 @@ class Controller {
 				this.res.json(resp);
 			}else{
 				//对错误的请求做处理
-				switch(code){
+				switch(data.st){
 					case 200: this.res.json({st:200});break;
 					case 404: this.render('error');break;
-					default: this.res.json({st:code, data:'error'});break;
+					default: this.res.json({st:data.st, data:'error'});break;
 				}
 			}
 		}
