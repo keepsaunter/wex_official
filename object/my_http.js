@@ -14,12 +14,13 @@ class MyHttp {
 		Object.assign(this, option);
 	}
 	post(callback){
-		if(typeof data == "object"){
-			data = JSON.stringify(data);
+		var t_data = this.data;
+		if(typeof t_data == "object"){
+			t_data = JSON.stringify(t_data);
 		}
 		var hostname = this.url.match(/\/\/([a-zA-Z\.0-9:]*)/)[1];
 		var path = this.url.substr(this.url.indexOf(hostname)+hostname.length);
-		this.headers['Content-Length'] = Buffer.byteLength(this.data);
+		this.headers['Content-Length'] = Buffer.byteLength(t_data);
 
 		var opt = {
 		  hostname: hostname,
@@ -37,7 +38,7 @@ class MyHttp {
 		req.on('error', function(e) {
 			callback(e, "");
 		});
-		req.write(data);
+		req.write(t_data);
 		req.end();
 	}
 	get(callback){

@@ -1,12 +1,12 @@
 import Controller from './controller.js';
 import Mysqldb from '../lib/mysqldb.js';
 import { createRandomChart } from '../lib/lib.js';
-import SsConfig from '../config/smallsw.js';
 import MyHttp from '../object/my_http.js';
+import crypto from 'crypto';
 class SsapiController extends Controller {
 	constructor(req, res, next){
 		super(req, res, next);
-		this.config = SsConfig;
+		this.config = global.ssconfig;
 	}
 	test(){
 		var mysqldb = new Mysqldb({database: this.config.database});
@@ -37,6 +37,86 @@ class SsapiController extends Controller {
 			}
 		}) === false){
 			self.resp({type:'text/plain',data:'重置失败'});
+		}
+	}
+	test2(){
+		var args = {
+      timestamp: '2018-03-23 20:26:03',
+      format: 'json',
+      app_key: '24820617',
+      v: '2.0',
+      sign_method: 'md5'
+    };
+    var params= {tpwd_param: {text:"efsefesfds",url:"http://m.taobao.com"},method:'taobao.wireless.share.tpwd.create'};
+    for (var key in params) {
+        if(typeof params[key] === 'object'){
+            args[key] = JSON.stringify(params[key]);
+        } else{
+            args[key] = params[key];
+        }
+    }
+    var sorted = Object.keys(args).sort();
+    var basestring = '67702038ff980c5c92d94669cb3f0228';
+    for (var i = 0, l = sorted.length; i < l; i++) {
+        var k = sorted[i];
+        basestring += k + params[k];
+    }
+    basestring += '67702038ff980c5c92d94669cb3f0228';
+    var md5_crypto = crypto.createHash('md5');
+		md5_crypto.update(basestring);
+		var temp_data_sign = md5_crypto.digest('hex');
+
+    this.resp({st: 999, msg: temp_data_sign.toUpperCase()});
+	}
+	createTpwd(){
+		var temp_reqdata = this.req.query;
+		var tpwd_url = temp_reqdata.tpwd_url;
+		var tpwd_text = temp_reqdata.tpwd_text;
+		var self = this;
+		if(tpwd_url && tpwd_text){
+			var t_config = this.config;
+			var tpwd_logo = t_config.ss_logo;
+			var temp_data = {
+				app_key: t_config.al_appkey,
+				method: 'taobao.wireless.share.tpwd.create',
+				sign_method: 'md5',
+				timestamp: Mysqldb.getDatetime(),
+				format: 'json',
+				v: '2.0'
+				// tpwd_param: {text:"efsefesfds",url:"http://m.taobao.com"}
+			}
+			var temp_data = {
+				app_key: t_config.al_appkey,
+				method: 'taobao.wireless.share.tpwd.create',
+				timestamp: '2018-03-23 20:26:03',
+				format: 'xml',
+				v: '2.0',
+				partner_id: 'top-apitools',
+				force_sensitive_param_fuzzy: true,
+				tpwd_param: {text:"efsefesfds",url:"http://m.taobao.com"}
+			}
+			var t_sign_str = '', req_str = '';
+			Object.keys(temp_data).sort().forEach(key => {
+				var temp_item =temp_data[key];
+				// if(typeof temp_item == 'object'){
+				// 	temp_item = JSON.stringify(temp_item);
+				// }
+				t_sign_str += key+temp_item;
+				req_str += key+'='+temp_item+'&';
+			})
+			// console.log(t_sign_str);
+			var md5_crypto = crypto.createHash('md5');
+			// console.log(t_config.al_app_secret);
+			md5_crypto.update(t_config.al_app_secret+t_sign_str+t_config.al_app_secret);
+			temp_data.sign = md5_crypto.digest('hex');
+			self.resp({st: 999, msg: temp_data.sign});
+			// console.log('?'+req_str+'sign='+temp_data.sign);
+			// new MyHttp({
+			// 	url:'http://gw.api.taobao.com/router/rest'+'?'+req_str+'sign='+temp_data.sign,
+			// 	data: temp_data
+			// }).get((err, res) => {
+			// 	self.resp({st: 999, msg: res});
+			// })		
 		}
 	}
 	getConf(){
