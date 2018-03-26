@@ -40,83 +40,124 @@ class SsapiController extends Controller {
 		}
 	}
 	test2(){
-		var args = {
-      timestamp: '2018-03-23 20:26:03',
-      format: 'json',
-      app_key: '24820617',
-      v: '2.0',
-      sign_method: 'md5'
-    };
-    var params= {tpwd_param: {text:"efsefesfds",url:"http://m.taobao.com"},method:'taobao.wireless.share.tpwd.create'};
-    for (var key in params) {
-        if(typeof params[key] === 'object'){
-            args[key] = JSON.stringify(params[key]);
-        } else{
-            args[key] = params[key];
-        }
-    }
-    var sorted = Object.keys(args).sort();
-    var basestring = '67702038ff980c5c92d94669cb3f0228';
-    for (var i = 0, l = sorted.length; i < l; i++) {
-        var k = sorted[i];
-        basestring += k + params[k];
-    }
-    basestring += '67702038ff980c5c92d94669cb3f0228';
-    var md5_crypto = crypto.createHash('md5');
-		md5_crypto.update(basestring);
-		var temp_data_sign = md5_crypto.digest('hex');
-
-    this.resp({st: 999, msg: temp_data_sign.toUpperCase()});
-	}
-	createTpwd(){
-		var temp_reqdata = this.req.query;
-		var tpwd_url = temp_reqdata.tpwd_url;
-		var tpwd_text = temp_reqdata.tpwd_text;
+		var t_config = this.config;
 		var self = this;
-		if(tpwd_url && tpwd_text){
-			var t_config = this.config;
-			var tpwd_logo = t_config.ss_logo;
+			// var temp_data = {
+			// 	app_key: '24820617',
+			// 	method: 'taobao.tbk.tpwd.create',
+			// 	sign_method: 'md5',
+			// 	timestamp: '2018-03-26 10:52:30',
+			// 	format: 'json',
+			// 	v: '2.0',
+			// 	text:"这是中文字一个",
+			// 	url:"https://uland.taobao.com/quan/detail"
+			// }
 			var temp_data = {
-				app_key: t_config.al_appkey,
-				method: 'taobao.wireless.share.tpwd.create',
+				app_key: '24820617',
+				method: 'taobao.tbk.tpwd.create',
 				sign_method: 'md5',
 				timestamp: Mysqldb.getDatetime(),
 				format: 'json',
-				v: '2.0'
-				// tpwd_param: {text:"efsefesfds",url:"http://m.taobao.com"}
-			}
-			var temp_data = {
-				app_key: t_config.al_appkey,
-				method: 'taobao.wireless.share.tpwd.create',
-				timestamp: '2018-03-23 20:26:03',
-				format: 'xml',
 				v: '2.0',
-				partner_id: 'top-apitools',
-				force_sensitive_param_fuzzy: true,
-				tpwd_param: {text:"efsefesfds",url:"http://m.taobao.com"}
+				text:"这是中文字一个",
+				url:"https://uland.taobao.com/quan/detail"
 			}
+			//,logo:temp_goods_img&&/http:\/\//.test(temp_goods_img)?temp_goods_img:t_config.ss_logo
 			var t_sign_str = '', req_str = '';
 			Object.keys(temp_data).sort().forEach(key => {
 				var temp_item =temp_data[key];
-				// if(typeof temp_item == 'object'){
-				// 	temp_item = JSON.stringify(temp_item);
-				// }
+				if(typeof temp_item == 'object'){
+					temp_item = JSON.stringify(temp_item);
+				}
 				t_sign_str += key+temp_item;
+				//注：这里传递timestamp或中文要用encodeURI编码
+				if(key == 'text' || key == 'timestamp'){
+					temp_item = encodeURI(temp_item);
+				}
+				if(key == 'url'){
+					temp_item = encodeURIComponent(temp_item);
+				}
 				req_str += key+'='+temp_item+'&';
 			})
-			// console.log(t_sign_str);
 			var md5_crypto = crypto.createHash('md5');
-			// console.log(t_config.al_app_secret);
 			md5_crypto.update(t_config.al_app_secret+t_sign_str+t_config.al_app_secret);
-			temp_data.sign = md5_crypto.digest('hex');
-			self.resp({st: 999, msg: temp_data.sign});
-			// console.log('?'+req_str+'sign='+temp_data.sign);
-			// new MyHttp({
-			// 	url:'http://gw.api.taobao.com/router/rest'+'?'+req_str+'sign='+temp_data.sign,
-			// 	data: temp_data
-			// }).get((err, res) => {
-			// 	self.resp({st: 999, msg: res});
-			// })		
+			req_str += 'sign='+md5_crypto.digest('hex').toUpperCase();
+			new MyHttp({
+				url:'https://eco.taobao.com/router/rest?'+req_str,
+			}).get((err, res) => {
+				console.log(err);
+				console.log(res);
+				self.resp({st: 999, msg: res});
+				// try{
+				// 	res = JSON.parse(res);
+				// 	if(!res.error_response && res.wireless_share_tpwd_create_response){
+				// 		self.resp({model: res.wireless_share_tpwd_create_response.model});
+				// 	}else{
+				// 		self.resp({st: 999, msg: res.error_response.sub_msg||res.error_response.msg||''});
+				// 	}
+				// }catch(e){
+				// 	self.resp({st: 999, msg: res});
+				// }
+			})
+	}
+	createTpwd(){
+		var temp_reqdata = this.req.query;
+		var tpwd_text = temp_reqdata.tpwd_text;
+		var tpwd_url = temp_reqdata.tpwd_url;
+		var self = this;
+		console.log(tpwd_url);
+		if(tpwd_url && tpwd_text){
+			var t_config = this.config;
+			var temp_goods_img = temp_reqdata.goods_img;
+			var temp_data = {
+				app_key: t_config.al_appkey,
+				method: 'taobao.tbk.tpwd.create',
+				sign_method: 'md5',
+				timestamp: Mysqldb.getDatetime(),
+				format: 'json',
+				v: '2.0',
+				text:"这是中文字一个",
+				url:"https://uland.taobao.com/quan/detail"
+			}
+			//,logo:temp_goods_img&&/http:\/\//.test(temp_goods_img)?temp_goods_img:t_config.ss_logo
+			var t_sign_str = '', req_str = '';
+			Object.keys(temp_data).sort().forEach(key => {
+				var temp_item =temp_data[key];
+				if(typeof temp_item == 'object'){
+					temp_item = JSON.stringify(temp_item);
+				}
+				t_sign_str += key+temp_item;
+				//注：这里传递timestamp或中文要用encodeURI编码
+				if(key == 'text' || key == 'timestamp'){
+					temp_item = encodeURI(temp_item);
+				}
+				if(key == 'url'){
+					temp_item = encodeURIComponent(temp_item);
+				}
+				req_str += key+'='+temp_item+'&';
+			})
+			var md5_crypto = crypto.createHash('md5');
+			md5_crypto.update(t_config.al_app_secret+t_sign_str+t_config.al_app_secret);
+			req_str += 'sign='+md5_crypto.digest('hex').toUpperCase();
+
+			new MyHttp({
+				url:'https://eco.taobao.com/router/rest?'+req_str,
+			}).get((err, res) => {
+				console.log(err);
+				console.log(res);
+				try{
+					res = JSON.parse(res);
+					if(!res.error_response && res.wireless_share_tpwd_create_response){
+						self.resp({model: res.wireless_share_tpwd_create_response.model});
+					}else{
+						self.resp({st: 999, msg: res.error_response.sub_msg||res.error_response.msg||''});
+					}
+				}catch(e){
+					self.resp({st: 999, msg: res});
+				}
+			})
+		}else{
+			this.resp({st: 999});
 		}
 	}
 	getConf(){
@@ -148,37 +189,17 @@ class SsapiController extends Controller {
 		var mysqldb = new Mysqldb({database: this.config.database});
 		var self = this;
 		if(temp_user_id){
-			mysqldb.select('user_setting', 'on_quan_feature,on_overdue_quan', `user_id="${temp_user_id}"`,(e, r) =>{
-				if(!e){
-					if(r.length){
-						self.resp({st: 200, data:r[0]});
-					}else{
-						mysqldb.insert('user_setting', {user_id:temp_user_id}, (e,r)=>{
-							if(!e){
-								mysqldb.select('user_setting', 'on_quan_feature,on_overdue_quan', `user_id=0`,(e, r) =>{
-									if(!e){
-										self.resp({st: 200, data:r?r[0]:[]});
-									}else{
-										self.resp({st: 999, msg:e});
-									}
-								})
-							}else{
-								self.resp({st: 999, msg:e});
-							}
-						})
-					}
+			mysqldb.select('user_setting', '*', `user_id="${temp_user_id}" or user_id="0"`,(e, r) =>{
+				if(!e && r.length){
+						var temp_data = r[0]['user_id']=='0'?r[1]?r[1]:[]:r[0];
+						delete temp_data.user_id;
+						self.resp({st: 200, data:temp_data});
 				}else{
 					self.resp({st: 999, msg:e});
 				}
 			})
 		}else{
-			mysqldb.select('user_setting', 'on_quan_feature,on_overdue_quan', `user_id=0`,(e, r) =>{
-				if(!e){
-					self.resp({st: 200, data:r?r[0]:[]});
-				}else{
-					self.resp({st: 999, msg:e});
-				}
-			})
+			self.resp({st: 999});
 		}
 	}
 	updateSetting(){
@@ -284,6 +305,8 @@ class SsapiController extends Controller {
 			}) == false){
 				self.resp({st: 999});
 			}
+		}else{
+			this.resp({st: 999});
 		}
 	}
 	collect(){
@@ -427,6 +450,8 @@ class SsapiController extends Controller {
 			}) == false){
 				self.resp({st: 999});
 			}
+		}else{
+			this.resp({st: 999});
 		}
 	}
 	
@@ -481,6 +506,8 @@ class SsapiController extends Controller {
 			}, () => {
 				self.resp([]);
 			})
+		}else{
+			this.resp({st: 999});
 		}
 	}
 
