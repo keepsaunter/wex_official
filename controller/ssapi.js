@@ -39,76 +39,15 @@ class SsapiController extends Controller {
 			self.resp({type:'text/plain',data:'重置失败'});
 		}
 	}
-	test2(){
-		var t_config = this.config;
-		var self = this;
-			// var temp_data = {
-			// 	app_key: '24820617',
-			// 	method: 'taobao.tbk.tpwd.create',
-			// 	sign_method: 'md5',
-			// 	timestamp: '2018-03-26 10:52:30',
-			// 	format: 'json',
-			// 	v: '2.0',
-			// 	text:"这是中文字一个",
-			// 	url:"https://uland.taobao.com/quan/detail"
-			// }
-			var temp_data = {
-				app_key: '24820617',
-				method: 'taobao.tbk.tpwd.create',
-				sign_method: 'md5',
-				timestamp: Mysqldb.getDatetime(),
-				format: 'json',
-				v: '2.0',
-				text:"这是中文字一个",
-				url:"https://uland.taobao.com/quan/detail"
-			}
-			//,logo:temp_goods_img&&/http:\/\//.test(temp_goods_img)?temp_goods_img:t_config.ss_logo
-			var t_sign_str = '', req_str = '';
-			Object.keys(temp_data).sort().forEach(key => {
-				var temp_item =temp_data[key];
-				if(typeof temp_item == 'object'){
-					temp_item = JSON.stringify(temp_item);
-				}
-				t_sign_str += key+temp_item;
-				//注：这里传递timestamp或中文要用encodeURI编码
-				if(key == 'text' || key == 'timestamp'){
-					temp_item = encodeURI(temp_item);
-				}
-				if(key == 'url'){
-					temp_item = encodeURIComponent(temp_item);
-				}
-				req_str += key+'='+temp_item+'&';
-			})
-			var md5_crypto = crypto.createHash('md5');
-			md5_crypto.update(t_config.al_app_secret+t_sign_str+t_config.al_app_secret);
-			req_str += 'sign='+md5_crypto.digest('hex').toUpperCase();
-			new MyHttp({
-				url:'https://eco.taobao.com/router/rest?'+req_str,
-			}).get((err, res) => {
-				console.log(err);
-				console.log(res);
-				self.resp({st: 999, msg: res});
-				// try{
-				// 	res = JSON.parse(res);
-				// 	if(!res.error_response && res.wireless_share_tpwd_create_response){
-				// 		self.resp({model: res.wireless_share_tpwd_create_response.model});
-				// 	}else{
-				// 		self.resp({st: 999, msg: res.error_response.sub_msg||res.error_response.msg||''});
-				// 	}
-				// }catch(e){
-				// 	self.resp({st: 999, msg: res});
-				// }
-			})
-	}
 	createTpwd(){
 		var temp_reqdata = this.req.query;
 		var tpwd_text = temp_reqdata.tpwd_text;
 		var tpwd_url = temp_reqdata.tpwd_url;
 		var self = this;
-		console.log(tpwd_url);
 		if(tpwd_url && tpwd_text){
 			var t_config = this.config;
-			var temp_goods_img = temp_reqdata.goods_img;
+			tpwd_url = decodeURIComponent(tpwd_url);
+			tpwd_text = tpwd_text.length > 5 ? tpwd_text : "超值优惠，惊喜多多";
 			var temp_data = {
 				app_key: t_config.al_appkey,
 				method: 'taobao.tbk.tpwd.create',
@@ -116,10 +55,10 @@ class SsapiController extends Controller {
 				timestamp: Mysqldb.getDatetime(),
 				format: 'json',
 				v: '2.0',
-				text:"这是中文字一个",
-				url:"https://uland.taobao.com/quan/detail"
+				text:tpwd_text,
+				url:tpwd_url,
+				logo: temp_reqdata.goods_img?decodeURIComponent(temp_reqdata.goods_img):t_config.ss_logo
 			}
-			//,logo:temp_goods_img&&/http:\/\//.test(temp_goods_img)?temp_goods_img:t_config.ss_logo
 			var t_sign_str = '', req_str = '';
 			Object.keys(temp_data).sort().forEach(key => {
 				var temp_item =temp_data[key];
@@ -131,24 +70,23 @@ class SsapiController extends Controller {
 				if(key == 'text' || key == 'timestamp'){
 					temp_item = encodeURI(temp_item);
 				}
-				if(key == 'url'){
+				//注：url中有特殊字符串
+				if(key == 'url' || key == 'logo'){
 					temp_item = encodeURIComponent(temp_item);
 				}
 				req_str += key+'='+temp_item+'&';
 			})
 			var md5_crypto = crypto.createHash('md5');
-			md5_crypto.update(t_config.al_app_secret+t_sign_str+t_config.al_app_secret);
+			md5_crypto.update(t_config.al_app_secret+t_sign_str+t_config.al_app_secret,'utf8');
 			req_str += 'sign='+md5_crypto.digest('hex').toUpperCase();
 
 			new MyHttp({
 				url:'https://eco.taobao.com/router/rest?'+req_str,
 			}).get((err, res) => {
-				console.log(err);
-				console.log(res);
 				try{
 					res = JSON.parse(res);
-					if(!res.error_response && res.wireless_share_tpwd_create_response){
-						self.resp({model: res.wireless_share_tpwd_create_response.model});
+					if(!res.error_response && res.tbk_tpwd_create_response){
+						self.resp(res.tbk_tpwd_create_response.data);
 					}else{
 						self.resp({st: 999, msg: res.error_response.sub_msg||res.error_response.msg||''});
 					}
