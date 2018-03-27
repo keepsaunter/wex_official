@@ -17,7 +17,7 @@ class SsapiController extends Controller {
 	}
 	slideshow(){
 		var self = this;
-		(new Mysqldb({database: self.config.database})).select('slideshow', 'title,url,image', function(e, r, f){
+		(new Mysqldb({database: self.config.database})).select('slideshow', 'title,url,image', 'status=1', function(e, r, f){
 			if(!e){
 				self.resp(r);
 			}else{
@@ -179,15 +179,17 @@ class SsapiController extends Controller {
 		}
 	}
 	getCollected(){
-		var temp_user_id = this.req.query.user_id;
+		var temp_query = this.req.query;
+		var temp_user_id = temp_query.user_id;
 		if(temp_user_id){
-			var temp_page = this.req.query.page||1;
-			var on_overdue_quan = this.req.query.on_overdue_quan||1;
+			console.log(temp_query.sort_by);
+			var temp_page = temp_query.page||1;
+			var on_overdue_quan = temp_query.on_overdue_quan||1;
 			var page_length = 6;
 			var mysqldb = new Mysqldb({database: this.config.database});
 			var self = this;
 			var fields_str = 'goods_id,goods_img,goods_name,goods_intro,goods_sale_num,date_format(quan_end_time+"", "%Y-%m-%d %H:%m:%S") as quan_end_time,quan_price,price,quan_after_price,site_type';
-			if(mysqldb.query(`SELECT ${fields_str} FROM collect WHERE user_id="${temp_user_id}"${on_overdue_quan==1?"":' and quan_end_time>="'+Mysqldb.getDatetime()+'"'} ORDER BY collect_time desc LIMIT ${(temp_page-1)*page_length}, ${page_length}`, (e,r) =>{
+			if(mysqldb.query(`SELECT ${fields_str} FROM collect WHERE user_id="${temp_user_id}"${on_overdue_quan==1?"":' and quan_end_time>="'+Mysqldb.getDatetime()+'"'} ORDER BY ${temp_query.sort_by==1?'quan_end_time asc':'collect_time desc'} LIMIT ${(temp_page-1)*page_length}, ${page_length}`, (e,r) =>{
 				if(e){
 					self.resp({st: 999, msg:e});
 				}else{
@@ -324,15 +326,16 @@ class SsapiController extends Controller {
 		}
 	}
 	getQuanRecord(){
-		var temp_user_id = this.req.query.user_id;
+		var temp_query = this.req.query;
+		var temp_user_id = temp_query.user_id;
 		if(temp_user_id){
-			var temp_page = this.req.query.page||1;
-			var on_overdue_quan = this.req.query.on_overdue_quan||1;
+			var temp_page = temp_query.page||1;
+			var on_overdue_quan = temp_query.on_overdue_quan||1;
 			var page_length = 6;
 			var mysqldb = new Mysqldb({database: this.config.database});
 			var self = this;
 			var fields_str = 'goods_id,goods_img,goods_name,goods_intro,goods_sale_num,date_format(quan_end_time+"", "%Y-%m-%d %H:%m:%S") as quan_end_time,quan_price,price,quan_after_price,site_type,date_format(record_time+"", "%Y-%m-%d %H:%m:%S") as record_time';
-			if(mysqldb.query(`SELECT ${fields_str} FROM quan_record WHERE user_id="${temp_user_id}"${on_overdue_quan==1?"":' and quan_end_time>="'+Mysqldb.getDatetime()+'"'} ORDER BY record_time desc LIMIT ${(temp_page-1)*page_length}, ${page_length}`, (e,r) =>{
+			if(mysqldb.query(`SELECT ${fields_str} FROM quan_record WHERE user_id="${temp_user_id}"${on_overdue_quan==1?"":' and quan_end_time>="'+Mysqldb.getDatetime()+'"'} ORDER BY ${temp_query.sort_by==1?'quan_end_time asc':'record_time desc'} LIMIT ${(temp_page-1)*page_length}, ${page_length}`, (e,r) =>{
 				if(e){
 					self.resp({st: 999, msg:e});
 				}else{
