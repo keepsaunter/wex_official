@@ -8,13 +8,6 @@ class SsapiController extends Controller {
 		super(req, res, next);
 		this.config = global.ssconfig;
 	}
-	test(){
-		var mysqldb = new Mysqldb({database: this.config.database});
-		mysqldb.select('slideshow', (e,r,f) => {
-			console.log(r);
-		})
-		this.resp('r');
-	}
 	slideshow(){
 		var self = this;
 		(new Mysqldb({database: self.config.database})).select('slideshow', 'title,url,image', 'status=1', function(e, r, f){
@@ -182,7 +175,6 @@ class SsapiController extends Controller {
 		var temp_query = this.req.query;
 		var temp_user_id = temp_query.user_id;
 		if(temp_user_id){
-			console.log(temp_query.sort_by);
 			var temp_page = temp_query.page||1;
 			var on_overdue_quan = temp_query.on_overdue_quan||1;
 			var page_length = 6;
