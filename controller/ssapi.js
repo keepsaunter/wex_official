@@ -119,7 +119,7 @@ class SsapiController extends Controller {
 		var temp_user_id = this.req.query.user_id;
 		var mysqldb = new Mysqldb({database: this.config.database});
 		var self = this;
-		mysqldb.select('user_setting', '*', `user_id="${temp_user_id?temp_user_id+' or user_id=':''}"0"`,(e, r) =>{
+		mysqldb.select('user_setting', '*', `user_id=${temp_user_id?'"'+temp_user_id+'" or user_id=':''}"0"`,(e, r) =>{
 			if(!e && r.length){
 					var temp_data = r[0]['user_id']=='0' && r[1] ? r[1]:r[0];
 					delete temp_data.user_id;
