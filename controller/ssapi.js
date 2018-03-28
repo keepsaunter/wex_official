@@ -203,7 +203,7 @@ class SsapiController extends Controller {
 		}
 	}
 	delCollect(){
-		var temp_data = this.req.body;
+		var temp_data = this.req.query;
 		if(temp_data.user_id && temp_data.goods_id && temp_data.site_type && temp_data.data_length){
 			var temp_user_id = temp_data.user_id;
 			var mysqldb = new Mysqldb({database: this.config.database});
@@ -231,12 +231,12 @@ class SsapiController extends Controller {
 		}
 	}
 	delOverdueCollect(){
-		var temp_data = this.req.body;
+		var temp_data = this.req.query;
 		if(temp_data.user_id){
 			var temp_user_id = temp_data.user_id;
 			var mysqldb = new Mysqldb({database: this.config.database});
 			var self = this;
-			if(mysqldb.delete('collect', `user_id="${temp_user_id}" and quan_end_time>="${Mysqldb.getDatetime()}"`, (e,r) =>{
+			if(mysqldb.delete('collect', `user_id="${temp_user_id}" and quan_end_time<"${Mysqldb.getDatetime()}"`, (e,r) =>{
 				if(e){
 					self.resp({st: 999, msg:e});
 				}else{
@@ -250,7 +250,7 @@ class SsapiController extends Controller {
 		}
 	}
 	collect(){
-		var temp_data = this.req.body;
+		var temp_data = this.req.query;
 		if(temp_data.user_id && temp_data.goods_id && temp_data.site_type){
 			var mysqldb = new Mysqldb({database: this.config.database});
 			var self = this;
@@ -288,7 +288,7 @@ class SsapiController extends Controller {
 	}
 
 	quanRecord(){
-		var temp_data = this.req.body;
+		var temp_data = this.req.query;
 		if(temp_data.user_id && temp_data.goods_id && temp_data.site_type){
 			var mysqldb = new Mysqldb({database: this.config.database});
 			var self = this;
@@ -349,7 +349,7 @@ class SsapiController extends Controller {
 		}
 	}
 	delQuanRecord(){
-		var temp_data = this.req.body;
+		var temp_data = this.req.query;
 		if(temp_data.user_id && temp_data.goods_id && temp_data.site_type && temp_data.data_length){
 			var temp_user_id = temp_data.user_id;
 			var mysqldb = new Mysqldb({database: this.config.database});
@@ -377,12 +377,12 @@ class SsapiController extends Controller {
 		}
 	}
 	delOverdueRecord(){
-		var temp_data = this.req.body;
+		var temp_data = this.req.query;
 		if(temp_data.user_id){
 			var temp_user_id = temp_data.user_id;
 			var mysqldb = new Mysqldb({database: this.config.database});
 			var self = this;
-			if(mysqldb.delete('quan_record', `user_id="${temp_user_id}" and quan_end_time>="${Mysqldb.getDatetime()}"`, (e,r) =>{
+			if(mysqldb.delete('quan_record', `user_id="${temp_user_id}" and quan_end_time<"${Mysqldb.getDatetime()}"`, (e,r) =>{
 				if(e){
 					self.resp({st: 999, msg:e});
 				}else{
