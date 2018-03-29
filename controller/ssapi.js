@@ -32,11 +32,42 @@ class SsapiController extends Controller {
 			self.resp({type:'text/plain',data:'重置失败'});
 		}
 	}
-	createTpwd(){
-		var temp_reqdata = this.req.query;
-		var tpwd_text = temp_reqdata.tpwd_text;
-		var tpwd_url = temp_reqdata.tpwd_url;
-		var self = this;
+	getQuan(){
+		var temp_query = this.req.query;
+		var {goods_id,goods_name,quan_id,on_priority_tw,goods_img,sign,timenow} = temp_query;
+		if(goods_id && quan_id && sign){
+			var temp_data = {
+				goods_id: goods_id,
+				goods_name: goods_name,
+				quan_id: quan_id,
+				on_priority_tw: on_priority_tw,
+				goods_img: encodeURIComponent(goods_img)
+			}
+			var str_sign = '';
+			Object.keys(temp_data).sort().forEach(item => {
+				str_sign += temp_data[item]+item;
+			})
+			var md5_crypto = crypto.createHash('sha1');
+			md5_crypto.update((str_sign+timenow).split("1").sort().join('8'),'utf8');
+			if(md5_crypto.digest('hex') == sign){
+				var t_config = this.config;
+				var self = this;
+				var goods_quan_url = `https://uland.taobao.com/coupon/edetail?activityId=${quan_id}&pid=${t_config.pid}&itemId=${goods_id}`
+				if(on_priority_tw == 1){
+					this.createTpwd(goods_name, goods_quan_url, goods_img, (err, res) => {
+						self.resp(!err&&res ? {model: res} : {url: goods_quan_url});
+					})
+				}else{
+					self.resp({url: goods_quan_url});
+				}
+			}else{
+				this.resp({st: 999, msg:'illegal request'});
+			}
+		}else{
+			this.resp({st: 999, msg:'params wrong'});
+		}
+	}
+	createTpwd(tpwd_text, tpwd_url, logo_img, callback){
 		if(tpwd_url && tpwd_text){
 			var t_config = this.config;
 			tpwd_url = decodeURIComponent(tpwd_url);
@@ -50,7 +81,7 @@ class SsapiController extends Controller {
 				v: '2.0',
 				text:tpwd_text,
 				url:tpwd_url,
-				logo: temp_reqdata.goods_img?decodeURIComponent(temp_reqdata.goods_img):t_config.ss_logo
+				logo: logo_img?decodeURIComponent(logo_img):t_config.ss_logo
 			}
 			var t_sign_str = '', req_str = '';
 			Object.keys(temp_data).sort().forEach(key => {
@@ -79,69 +110,71 @@ class SsapiController extends Controller {
 				try{
 					res = JSON.parse(res);
 					if(!res.error_response && res.tbk_tpwd_create_response){
-						self.resp(res.tbk_tpwd_create_response.data);
+						callback('', res.tbk_tpwd_create_response.data.model);
 					}else{
-						self.resp({st: 999, msg: res.error_response.sub_msg||res.error_response.msg||''});
+						callback(res.error_response.sub_msg||res.error_response.msg||'');
 					}
 				}catch(e){
-					self.resp({st: 999, msg: res});
+					callback(res);
 				}
 			})
 		}else{
-			this.resp({st: 999});
-		}
-	}
-	getConf(){
-		if(this.req.headers && this.req.headers.token){
-			var t_token = this.req.headers.token;
-			var req_token_sec = this.config.req_token;
-			if(req_token_sec){
-				if(t_token === req_token_sec){
-					var mysqldb = new Mysqldb({database: this.config.database});
-					mysqldb.select('appkey','keyname,domain,value',(e, r) => {
-						if(!e){
-							this.resp(r);
-						}else{
-							this.resp({st: 999, msg: e});
-						}
-					})
-				}else{
-					this.resp({st: 999, msg: '非法请求'});
-				}
-			}else{
-				this.resp({st: 500, msg: '内部错误'});
-			}
-		}else{
-			this.resp({st: 999, msg: '非法请求'});
+			callback('params error');
 		}
 	}
 	getSetting(){
 		var temp_user_id = this.req.query.user_id;
 		var mysqldb = new Mysqldb({database: this.config.database});
 		var self = this;
-		mysqldb.select('user_setting', '*', `user_id=${temp_user_id?'"'+temp_user_id+'" or user_id=':''}"0"`,(e, r) =>{
-			if(!e && r.length){
-					var temp_data = r[0]['user_id']=='0' && r[1] ? r[1]:r[0];
-					delete temp_data.user_id;
-					self.resp({st: 200, data:temp_data});
-			}else{
-				self.resp({st: 999, msg:e});
-			}
+		if(temp_user_id){
+			var sql = 'SELECT s.id,s.key_name,s.title,s.remark,s.default_val,s.status,us.value FROM setting s LEFT JOIN (SELECT * FROM user_setting WHERE user_id="'+temp_user_id+'") us ON s.id=us.setting_id WHERE s.status!=0';
+		}else{
+			var sql = 'SELECT *,default_val as value FROM setting';
+		}
+		new Promise((resolve, reject)=>{
+			mysqldb.query(sql, (err, res) => {
+				if(!err){
+					if(temp_user_id){
+						var insert_str = '';
+						res.map((item, index, arr) => {
+							if(item.value == null||item.status==1){
+								if(item.value == null){
+									insert_str += ',("'+temp_user_id+'",'+item.id+','+item.default_val+')';
+								}
+								arr[index].value = arr[index].default_val;
+							}
+						})
+						if(insert_str){
+							insert_str = insert_str.substr(1);
+							mysqldb.query('INSERT INTO user_setting (user_id, setting_id, value) VALUES '+insert_str, (err_ins)=>{
+								err_ins? reject(err_ins) : resolve(res);
+							})
+						}else{
+							resolve(res);
+						}
+					}else{
+						resolve(res);
+					}
+				}else{
+					reject(err);
+				}
+			})
+		}).then(res => {
+			self.resp(res);
+		}, err => {
+			self.resp({st: 999, msg:err});
 		})
 	}
 	updateSetting(){
-		var temp_data = this.req.query;
-		var temp_user_id = temp_data.user_id
-		if(temp_user_id){
-			delete temp_data.user_id;
-			var self = this;
+		var temp_query = this.req.query;
+		var temp_user_id = temp_query.user_id
+		var temp_update_arr = JSON.parse(temp_query.update_arr);
+		if(temp_user_id && temp_update_arr){
 			var mysqldb = new Mysqldb({database: this.config.database});
-			mysqldb.update('user_setting', temp_data, '', `user_id="${temp_user_id}"`, (e,r)=>{
-				if(!e){
-					self.resp({st: 200, msg:'更新成功'});
-				}else{
-					self.resp({st: 999, msg:e});
-				}
+			var self = this;
+			var update_str = 'INSERT INTO user_setting (setting_id, value, user_id) VALUES ('+temp_update_arr.join(',"'+temp_user_id+'"),(')+',"'+temp_user_id+'") on duplicate key update value=values(value)';
+			mysqldb.query(update_str, err => {
+				err ? self.resp({st: 999, msg:err}) : self.resp({st: 200});
 			})
 		}else{
 			this.resp({st: 999, msg:e});
