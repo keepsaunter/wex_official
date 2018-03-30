@@ -55,12 +55,12 @@ mysqldb.select('config', (err, res) => {
 		global.ssconfig = {
 			database: database_name,
 			app_id: temp_conf.smAppId,
-			req_token: temp_conf.reqToken,
 			app_secret: temp_conf.smAppSecret,
 			day_score: temp_conf.dayScore,
 			ss_logo: temp_conf.ss_logo,
 			al_appkey: temp_conf.alAppkey,
-			al_app_secret: temp_conf.alAppSecret
+			al_app_secret: temp_conf.alAppSecret,
+			pid: temp_conf.pid
 		}
 	}
 })

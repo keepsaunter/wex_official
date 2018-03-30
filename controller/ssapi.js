@@ -53,12 +53,12 @@ class SsapiController extends Controller {
 				var t_config = this.config;
 				var self = this;
 				var goods_quan_url = `https://uland.taobao.com/coupon/edetail?activityId=${quan_id}&pid=${t_config.pid}&itemId=${goods_id}`
-				if(on_priority_tw == 1){
+				if(on_priority_tw == 0){
+					self.resp({url: goods_quan_url});
+				}else{
 					this.createTpwd(goods_name, goods_quan_url, goods_img, (err, res) => {
 						self.resp(!err&&res ? {model: res} : {url: goods_quan_url});
 					})
-				}else{
-					self.resp({url: goods_quan_url});
 				}
 			}else{
 				this.resp({st: 999, msg:'illegal request'});
@@ -69,43 +69,17 @@ class SsapiController extends Controller {
 	}
 	createTpwd(tpwd_text, tpwd_url, logo_img, callback){
 		if(tpwd_url && tpwd_text){
-			var t_config = this.config;
 			tpwd_url = decodeURIComponent(tpwd_url);
 			tpwd_text = tpwd_text.length > 5 ? tpwd_text : "超值优惠，惊喜多多";
-			var temp_data = {
-				app_key: t_config.al_appkey,
+			
+			var req_str = this.getTbQuery({
 				method: 'taobao.tbk.tpwd.create',
-				sign_method: 'md5',
-				timestamp: Mysqldb.getDatetime(),
-				format: 'json',
-				v: '2.0',
 				text:tpwd_text,
 				url:tpwd_url,
 				logo: logo_img?decodeURIComponent(logo_img):t_config.ss_logo
-			}
-			var t_sign_str = '', req_str = '';
-			Object.keys(temp_data).sort().forEach(key => {
-				var temp_item =temp_data[key];
-				if(typeof temp_item == 'object'){
-					temp_item = JSON.stringify(temp_item);
-				}
-				t_sign_str += key+temp_item;
-				//注：这里传递timestamp或中文要用encodeURI编码
-				if(key == 'text' || key == 'timestamp'){
-					temp_item = encodeURI(temp_item);
-				}
-				//注：url中有特殊字符串
-				if(key == 'url' || key == 'logo'){
-					temp_item = encodeURIComponent(temp_item);
-				}
-				req_str += key+'='+temp_item+'&';
-			})
-			var md5_crypto = crypto.createHash('md5');
-			md5_crypto.update(t_config.al_app_secret+t_sign_str+t_config.al_app_secret,'utf8');
-			req_str += 'sign='+md5_crypto.digest('hex').toUpperCase();
-
+			});
 			new MyHttp({
-				url:'https://eco.taobao.com/router/rest?'+req_str,
+				url:'https://eco.taobao.com/router/rest?'+req_str
 			}).get((err, res) => {
 				try{
 					res = JSON.parse(res);
@@ -120,6 +94,106 @@ class SsapiController extends Controller {
 			})
 		}else{
 			callback('params error');
+		}
+	}
+	test3(){
+		var params = {
+			method: 'taobao.ju.items.search',
+			simplify: 'true',
+			param_top_item_query: {
+				pid:'mm_131569079_43298255_365676314'
+			}
+		}
+		new MyHttp({url:"https://eco.taobao.com/router/rest?"+this.getTbQuery(params)}).get(
+			(e, data) => {
+				if(!e && data){
+					this.resp(data);
+				}else{
+					this.resp({st: 999, msg:e});
+				}
+			})
+	}
+	getTbQuery(params){
+		var t_config = this.config;
+		var temp_data = Object.assign({
+			app_key: t_config.al_appkey,
+			sign_method: 'md5',
+			timestamp: Mysqldb.getDatetime(),
+			format: 'json',
+			v: '2.0'
+		},params);
+		var t_sign_str = '', req_str = '';
+		Object.keys(temp_data).sort().forEach(key => {
+			var temp_item =temp_data[key];
+			if(typeof temp_item == 'object'){
+				temp_item = JSON.stringify(temp_item);
+			}
+			t_sign_str += key+temp_item;
+			//注：这里传递timestamp或中文要用encodeURI编码
+			if(key == 'text' || key == 'timestamp'){
+				temp_item = encodeURI(temp_item);
+			}
+			//注：url中有特殊字符串
+			if(key == 'url' || key == 'logo' || key == 'q'){
+				temp_item = encodeURIComponent(temp_item);
+			}
+			req_str += key+'='+temp_item+'&';
+		})
+		var md5_crypto = crypto.createHash('md5');
+		md5_crypto.update(t_config.al_app_secret+t_sign_str+t_config.al_app_secret,'utf8');
+		req_str += 'sign='+md5_crypto.digest('hex').toUpperCase();
+		return req_str;
+	}
+	alsearch(){
+		var temp_req = this.req.query;
+		var {sort,q,page,page_size,cat} = this.req.query;
+		var t_pid = this.config.pid;
+		if((q!=undefined || cat!=undefined) && t_pid){
+			var self = this;
+			var price_start = temp_req.price_start;
+			var price_end = temp_req.price_end;
+			var params = {};
+			var query_str = price_start!=undefined?params.start_price=price_start:'';
+			query_str += price_end!=undefined?params.end_price=price_end:'';
+			query_str += q!=undefined?params.q=decodeURIComponent(q):'';
+			query_str += cat!=undefined?params.cat=cat:'';
+			if(sort){
+				switch(sort){
+					case 'all': break;
+					case 'new': params.sort='tk_rate_des';break;
+					case 'sale_num': params.sort='total_sales_des';break;
+					case 'price_desc': params.sort='price_des';break;
+					case 'price_asc': params.sort='price_asc';break;
+					default: break;
+				}
+			}
+			params.has_coupon = 'true';
+			params.adzone_id = t_pid.substr(t_pid.lastIndexOf('_')+1);
+			params.method = 'taobao.tbk.dg.material.optional';
+			params.simplify = 'true';
+			new MyHttp({url:"https://eco.taobao.com/router/rest?"+this.getTbQuery(params)}).get(
+				(e, data) => {
+					if(!e && data){
+						try{
+							data = JSON.parse(data);
+							if(!data.error_response && data){
+								self.resp(data);
+							}else{
+								self.resp({st: 999, msg:data.error_response.sub_msg||data.error_response.msg||''});
+							}
+						}catch(e){
+							self.resp({st: 999, msg:data});
+						}
+					}else{
+						self.resp({st: 999, msg:e});
+					}
+				})
+		}else{
+			if(t_pid){
+				this.resp({st: 999, msg:'illegal request'});
+			}else{
+				this.resp({st: 999, msg:'server wrong'});
+			}
 		}
 	}
 	getSetting(){
