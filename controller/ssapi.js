@@ -53,7 +53,7 @@ class SsapiController extends Controller {
 				var t_config = this.config;
 				var self = this;
 				var goods_quan_url = `https://uland.taobao.com/coupon/edetail?activityId=${quan_id}&pid=${t_config.pid}&itemId=${goods_id}`
-				if(on_priority_tw == 0){
+				if(on_priority_tw === 0){
 					self.resp({url: goods_quan_url});
 				}else{
 					this.createTpwd(goods_name, goods_quan_url, goods_img, (err, res) => {
@@ -72,15 +72,13 @@ class SsapiController extends Controller {
 			tpwd_url = decodeURIComponent(tpwd_url);
 			tpwd_text = tpwd_text.length > 5 ? tpwd_text : "超值优惠，惊喜多多";
 			
-			var req_str = this.getTbQuery({
+			var params = {
 				method: 'taobao.tbk.tpwd.create',
 				text:tpwd_text,
 				url:tpwd_url,
 				logo: logo_img?decodeURIComponent(logo_img):t_config.ss_logo
-			});
-			new MyHttp({
-				url:'https://eco.taobao.com/router/rest?'+req_str
-			}).get((err, res) => {
+			};
+			this.tbQuery(params, (err, res) => {
 				try{
 					res = JSON.parse(res);
 					if(!res.error_response && res.tbk_tpwd_create_response){
@@ -96,24 +94,14 @@ class SsapiController extends Controller {
 			callback('params error');
 		}
 	}
-	test3(){
-		var params = {
-			method: 'taobao.ju.items.search',
-			simplify: 'true',
-			param_top_item_query: {
-				pid:'mm_131569079_43298255_365676314'
-			}
+	tbQuery(params,callback,url= "https://eco.taobao.com/router/rest"){
+		if(typeof callback == 'string'){
+			url = callback;
+			callback = '';
 		}
-		new MyHttp({url:"https://eco.taobao.com/router/rest?"+this.getTbQuery(params)}).get(
-			(e, data) => {
-				if(!e && data){
-					this.resp(data);
-				}else{
-					this.resp({st: 999, msg:e});
-				}
-			})
-	}
-	getTbQuery(params){
+		if(!callback){
+			callback = () => {};
+		}
 		var t_config = this.config;
 		var temp_data = Object.assign({
 			app_key: t_config.al_appkey,
@@ -130,7 +118,7 @@ class SsapiController extends Controller {
 			}
 			t_sign_str += key+temp_item;
 			//注：这里传递timestamp或中文要用encodeURI编码
-			if(key == 'text' || key == 'timestamp'){
+			if(key == 'text' || key == 'start_time' || key == 'end_time' || key == 'timestamp'){
 				temp_item = encodeURI(temp_item);
 			}
 			//注：url中有特殊字符串
@@ -142,7 +130,47 @@ class SsapiController extends Controller {
 		var md5_crypto = crypto.createHash('md5');
 		md5_crypto.update(t_config.al_app_secret+t_sign_str+t_config.al_app_secret,'utf8');
 		req_str += 'sign='+md5_crypto.digest('hex').toUpperCase();
-		return req_str;
+
+		new MyHttp({url:url+"?"+req_str}).get(callback)
+	}
+	altqg(){
+		var temp_req = this.req.query;
+		var { start_time, end_time } = temp_req;
+		if(start_time && end_time){
+			var t_pid = this.config.pid;
+			var self = this;
+			var params = {
+				method: 'taobao.tbk.ju.tqg.get',
+				start_time: decodeURI(start_time),
+				end_time: end_time,
+				simplify: 'true',
+				fields: 'click_url,pic_url,reserve_price,zk_final_price,total_amount,sold_num,title,start_time,end_time',
+				adzone_id: t_pid.substr(t_pid.lastIndexOf('_')+1)
+			}
+			if(temp_req.page_no) params.page_no = temp_req.page_no;
+			if(temp_req.page_size) params.page_size = temp_req.page_size;
+			this.tbQuery(params, (e, data) => {
+				if(!e && data){
+					try{
+						// data = JSON.parse(data);
+						// if(!data.error_response && data){
+						// 	self.resp(data);
+						// }else{
+						// 	self.resp({st: 999, msg:data.error_response.sub_msg||data.error_response.msg||''});
+						// }
+						self.resp(data);
+					}catch(e){
+						self.resp({st: 999, msg:data});
+					}
+				}else{
+					self.resp({st: 999, msg:e});
+				}
+			})
+		}else{
+
+		}
+		var page_no = temp_req.page_no||0;
+		var page_size = temp_req.page_no||0;
 	}
 	alsearch(){
 		var temp_req = this.req.query;
@@ -171,23 +199,22 @@ class SsapiController extends Controller {
 			params.adzone_id = t_pid.substr(t_pid.lastIndexOf('_')+1);
 			params.method = 'taobao.tbk.dg.material.optional';
 			params.simplify = 'true';
-			new MyHttp({url:"https://eco.taobao.com/router/rest?"+this.getTbQuery(params)}).get(
-				(e, data) => {
-					if(!e && data){
-						try{
-							data = JSON.parse(data);
-							if(!data.error_response && data){
-								self.resp(data);
-							}else{
-								self.resp({st: 999, msg:data.error_response.sub_msg||data.error_response.msg||''});
-							}
-						}catch(e){
-							self.resp({st: 999, msg:data});
+			this.tbQuery(params, (e, data) => {
+				if(!e && data){
+					try{
+						data = JSON.parse(data);
+						if(!data.error_response && data){
+							self.resp(data);
+						}else{
+							self.resp({st: 999, msg:data.error_response.sub_msg||data.error_response.msg||''});
 						}
-					}else{
-						self.resp({st: 999, msg:e});
+					}catch(e){
+						self.resp({st: 999, msg:data});
 					}
-				})
+				}else{
+					self.resp({st: 999, msg:e});
+				}
+			})
 		}else{
 			if(t_pid){
 				this.resp({st: 999, msg:'illegal request'});
