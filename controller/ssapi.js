@@ -138,27 +138,65 @@ class SsapiController extends Controller {
 		var { start_time, end_time } = temp_req;
 		if(start_time && end_time){
 			var t_pid = this.config.pid;
+			if(t_pid){
+				var self = this;
+				var params = {
+					method: 'taobao.tbk.ju.tqg.get',
+					start_time: decodeURI(start_time),
+					end_time: end_time,
+					simplify: 'true',
+					fields: 'click_url,pic_url,reserve_price,zk_final_price,total_amount,sold_num,title,start_time,end_time',
+					adzone_id: t_pid.substr(t_pid.lastIndexOf('_')+1)
+				}
+				if(temp_req.page_no) params.page_no = temp_req.page_no;
+				if(temp_req.page_size) params.page_size = temp_req.page_size;
+				this.tbQuery(params, (e, data) => {
+					if(!e && data){
+						try{
+							data = JSON.parse(data);
+							if(!data.error_response && data.results){
+								self.resp(data.results);
+							}else{
+								self.resp({st: 999, msg:data.error_response.sub_msg||data.error_response.msg||''});
+							}
+						}catch(e){
+							self.resp({st: 999, msg:data});
+						}
+					}else{
+						self.resp({st: 999, msg:e});
+					}
+				})
+			}else{
+				this.resp({st: 999, msg:'server wrong'});
+			}
+		}else{
+			this.resp({st: 999, msg:'wrong params'});
+		}
+	}
+	aljhs(){
+		var temp_req = this.req.query;
+		var { start_time, end_time } = temp_req;
+		var t_pid = this.config.pid;
+		if(t_pid){
 			var self = this;
 			var params = {
-				method: 'taobao.tbk.ju.tqg.get',
-				start_time: decodeURI(start_time),
-				end_time: end_time,
+				method: 'taobao.ju.items.search',
 				simplify: 'true',
-				fields: 'click_url,pic_url,reserve_price,zk_final_price,total_amount,sold_num,title,start_time,end_time',
-				adzone_id: t_pid.substr(t_pid.lastIndexOf('_')+1)
+				param_top_item_query:{
+					pid: t_pid
+				}
 			}
-			if(temp_req.page_no) params.page_no = temp_req.page_no;
+			if(temp_req.page_no) params.current_page = temp_req.page_no;
 			if(temp_req.page_size) params.page_size = temp_req.page_size;
 			this.tbQuery(params, (e, data) => {
 				if(!e && data){
 					try{
-						// data = JSON.parse(data);
-						// if(!data.error_response && data){
-						// 	self.resp(data);
-						// }else{
-						// 	self.resp({st: 999, msg:data.error_response.sub_msg||data.error_response.msg||''});
-						// }
-						self.resp(data);
+						data = JSON.parse(data);
+						if(!data.error_response && data.result && data.result.model_list){
+							self.resp(data.result.model_list);
+						}else{
+							self.resp({st: 999, msg:data.error_response.sub_msg||data.error_response.msg||''});
+						}
 					}catch(e){
 						self.resp({st: 999, msg:data});
 					}
@@ -167,10 +205,38 @@ class SsapiController extends Controller {
 				}
 			})
 		}else{
-
+			this.resp({st: 999, msg:'server wrong'});
 		}
-		var page_no = temp_req.page_no||0;
-		var page_size = temp_req.page_no||0;
+	}
+	alGoodsdetail(){
+		var temp_goods_id = this.req.query.goods_id;
+		if(temp_goods_id){
+			var self = this;
+			var params = {
+				method: 'taobao.tbk.item.info.get',
+				simplify: 'true',
+				fields: 'title,small_images,volume',
+				num_iids: temp_goods_id
+			}
+			this.tbQuery(params, (e, data) => {
+				if(!e && data){
+					try{
+						data = JSON.parse(data);
+						if(!data.error_response && data.results && data.results[0]){
+							self.resp(data.results[0]);
+						}else{
+							self.resp({st: 999, msg:data.error_response.sub_msg||data.error_response.msg||''});
+						}
+					}catch(e){
+						self.resp({st: 999, msg:data});
+					}
+				}else{
+					self.resp({st: 999, msg:e});
+				}
+			})
+		}else{
+			this.resp({st: 999, msg:'wrong params'});
+		}
 	}
 	alsearch(){
 		var temp_req = this.req.query;
