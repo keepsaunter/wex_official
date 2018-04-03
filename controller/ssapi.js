@@ -34,15 +34,17 @@ class SsapiController extends Controller {
 	}
 	getQuan(){
 		var temp_query = this.req.query;
-		var {goods_id,goods_name,quan_id,on_priority_tw,goods_img,sign,timenow} = temp_query;
-		if(goods_id && quan_id && sign){
+		var {goods_id,goods_name,quan_id,on_priority_tw,goods_img,sign,timenow,click_url} = temp_query;
+		if((goods_id && quan_id || click_url) && sign){
 			var temp_data = {
-				goods_id: goods_id,
 				goods_name: goods_name,
-				quan_id: quan_id,
 				on_priority_tw: on_priority_tw,
 				goods_img: encodeURIComponent(goods_img)
 			}
+			if(goods_id)	temp_data.goods_id = goods_id;
+			if(quan_id)	temp_data.quan_id = quan_id;
+			if(click_url)	temp_data.click_url = encodeURIComponent(click_url);
+
 			var str_sign = '';
 			Object.keys(temp_data).sort().forEach(item => {
 				str_sign += temp_data[item]+item;
@@ -52,7 +54,7 @@ class SsapiController extends Controller {
 			if(md5_crypto.digest('hex') == sign){
 				var t_config = this.config;
 				var self = this;
-				var goods_quan_url = `https://uland.taobao.com/coupon/edetail?activityId=${quan_id}&pid=${t_config.pid}&itemId=${goods_id}`
+				var goods_quan_url = click_url?click_url:`https://uland.taobao.com/coupon/edetail?activityId=${quan_id}&pid=${t_config.pid}&itemId=${goods_id}`
 				if(on_priority_tw === 0){
 					self.resp({url: goods_quan_url});
 				}else{
@@ -347,6 +349,26 @@ class SsapiController extends Controller {
 			this.resp({st: 999, msg:e});
 		}
 	}
+	isCollected2(){
+		var temp_data = this.req.query;
+		if(temp_data.user_id && temp_data.goods_id && temp_data.type){
+			var mysqldb = new Mysqldb({database: this.config.database});
+			var self = this;
+			mysqldb.get(temp_data.type=='1'?'tqg_collect':'jhs_collect', 'goods_id', `user_id="${temp_data.user_id}" and goods_id="${temp_data.goods_id}"`,(e, r) =>{
+				if(!e){
+					if(r.length){
+						self.resp({st: 200, data:{is_collected: 1}});
+					}else{
+						self.resp({st: 200, data:{is_collected: 0}});
+					}
+				}else{
+					self.resp({st: 999, msg:e});
+				}
+			})
+		}else{
+			this.resp({st: 999});
+		}
+	}
 	isCollected(){
 		var temp_data = this.req.query;
 		if(temp_data.user_id && temp_data.goods_id && temp_data.site_type){
@@ -365,6 +387,30 @@ class SsapiController extends Controller {
 			})
 		}else{
 			this.resp({st: 999});
+		}
+	}
+	getCollected2(){
+		var temp_query = this.req.query;
+		var temp_user_id = temp_query.user_id;
+		if(temp_user_id){
+			var temp_page = temp_query.page||1;
+			var on_overdue_quan = temp_query.on_overdue_quan||1;
+			var page_length = 6;
+			var mysqldb = new Mysqldb({database: this.config.database});
+			var self = this;
+			var fields_str = 'goods_id,goods_img,goods_name,date_format(start_time+"", "%Y-%m-%d %H:%m:%S") as start_time,date_format(end_time+"", "%Y-%m-%d %H:%m:%S") as end_time,origin_price,zk_price,click_url';
+			fields_str += temp_data.type=='1' ? '':',goods_intro';
+			if(mysqldb.query(`SELECT ${fields_str} FROM collect WHERE user_id="${temp_user_id}"${on_overdue_quan==1?"":' and quan_end_time>="'+Mysqldb.getDatetime()+'"'} ORDER BY ${temp_query.sort_by==1?'start_time asc':'collect_time desc'} LIMIT ${(temp_page-1)*page_length}, ${page_length}`, (e,r) =>{
+				if(e){
+					self.resp({st: 999, msg:e});
+				}else{
+					self.resp({st: 200, data:r});
+				}
+			}) == false){
+				self.resp({st: 999});
+			}
+		}else{
+			this.resp({st: 999, msg:'未登录'});
 		}
 	}
 	getCollected(){
@@ -390,6 +436,35 @@ class SsapiController extends Controller {
 			this.resp({st: 999, msg:'未登录'});
 		}
 	}
+	delCollect2(){
+		var temp_data = this.req.query;
+		if(temp_data.user_id && temp_data.goods_id && temp_data.type && temp_data.data_length){
+			var temp_user_id = temp_data.user_id;
+			var mysqldb = new Mysqldb({database: this.config.database});
+			var self = this;
+			var fields_str = 'goods_id,goods_img,goods_name,date_format(start_time+"", "%Y-%m-%d %H:%m:%S") as start_time,date_format(end_time+"", "%Y-%m-%d %H:%m:%S") as end_time,origin_price,zk_price,click_url';
+			fields_str += temp_data.type=='1' ? '':',goods_intro';
+			if(mysqldb.query(`SELECT ${fields_str} FROM ${temp_data.type=='1'?'tqg_collect':'jhs_collect'} WHERE user_id="${temp_user_id}" ORDER BY ${temp_query.sort_by==1?'start_time asc':'collect_time desc'} LIMIT ${temp_data.data_length},1`, (e,new_row) =>{
+				if(e){
+					self.resp({st: 999, msg:e});
+				}else{
+					if(mysqldb.delete(temp_data.type=='1'?'tqg_collect':'jhs_collect', `user_id="${temp_user_id}" and goods_id="${temp_data.goods_id}"`, (e,r) =>{
+						if(e){
+							self.resp({st: 999, msg:e});
+						}else{
+							self.resp({st: 200, msg:'成功删除！', data: new_row});
+						}
+					}) == false){
+						self.resp({st: 999});
+					}
+				}
+			}) == false){
+				self.resp({st: 999});
+			}
+		}else{
+			this.resp({st: 999});
+		}
+	}
 	delCollect(){
 		var temp_data = this.req.query;
 		if(temp_data.user_id && temp_data.goods_id && temp_data.site_type && temp_data.data_length){
@@ -397,7 +472,7 @@ class SsapiController extends Controller {
 			var mysqldb = new Mysqldb({database: this.config.database});
 			var self = this;
 			var fields_str = 'goods_id,goods_img,goods_name,goods_intro,goods_sale_num,date_format(quan_end_time+"", "%Y-%m-%d %H:%m:%S") as quan_end_time,quan_price,price,quan_after_price,site_type';
-			if(mysqldb.query(`SELECT ${fields_str} FROM collect WHERE user_id="${temp_user_id}" ORDER BY collect_time desc LIMIT ${temp_data.data_length},1`, (e,new_row) =>{
+			if(mysqldb.query(`SELECT ${fields_str} FROM collect WHERE user_id="${temp_user_id}" ORDER BY ${temp_query.sort_by==1?'quan_end_time asc':'collect_time desc'} LIMIT ${temp_data.data_length},1`, (e,new_row) =>{
 				if(e){
 					self.resp({st: 999, msg:e});
 				}else{
@@ -410,6 +485,25 @@ class SsapiController extends Controller {
 					}) == false){
 						self.resp({st: 999});
 					}
+				}
+			}) == false){
+				self.resp({st: 999});
+			}
+		}else{
+			this.resp({st: 999});
+		}
+	}
+	delOverdueCollect2(){
+		var temp_data = this.req.query;
+		if(temp_data.user_id&&temp_data.type){
+			var temp_user_id = temp_data.user_id;
+			var mysqldb = new Mysqldb({database: this.config.database});
+			var self = this;
+			if(mysqldb.delete(temp_data.type=='1'?'tqg_collect':'jhs_collect', `user_id="${temp_user_id}" and end_time<"${Mysqldb.getDatetime()}"`, (e,r) =>{
+				if(e){
+					self.resp({st: 999, msg:e});
+				}else{
+					self.resp({st: 200, msg:'成功删除！'});
 				}
 			}) == false){
 				self.resp({st: 999});
@@ -433,6 +527,45 @@ class SsapiController extends Controller {
 			}) == false){
 				self.resp({st: 999});
 			}
+		}else{
+			this.resp({st: 999});
+		}
+	}
+	collect2(){
+		var temp_data = this.req.query;
+		if(temp_data.user_id && temp_data.goods_id && temp_data.type){
+			var mysqldb = new Mysqldb({database: this.config.database});
+			var self = this;
+			var t_type = temp_data.type;
+			mysqldb.get(t_type=='1'?'tqg_collect':'jhs_collect', 'goods_id', `user_id="${temp_data.user_id}" and goods_id="${temp_data.goods_id}"`,(e, r) => {
+				if(!e){
+					if(!r.length){
+						temp_data.collect_time = Mysqldb.getDatetime();
+						delete temp_data.type;
+						if(mysqldb.insert(t_type=='1'?'tqg_collect':'jhs_collect', temp_data, (e,r) => {
+	    				if(e){
+	    					self.resp({st: 999, msg:e});
+	    				}else{
+	    					self.resp({st: 200, msg:'收藏成功！', data:{is_collected: 1}});
+	    				}
+	    			}) == false){
+	    				self.resp({st: 999});
+	    			}
+					}else{
+						if(mysqldb.delete(t_type=='1'?'tqg_collect':'jhs_collect', `user_id="${temp_data.user_id}" and goods_id="${temp_data.goods_id}"`, (e,r) =>{
+	    				if(e){
+	    					self.resp({st: 999, msg:e});
+	    				}else{
+	    					self.resp({st: 200, msg:'取消收藏！', data:{is_collected: 0}});
+	    				}
+	    			}) == false){
+	    				self.resp({st: 999});
+	    			}
+					}
+				}else{
+					self.resp({st: 999, msg:e});
+				}
+			})
 		}else{
 			this.resp({st: 999});
 		}
