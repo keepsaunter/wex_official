@@ -398,9 +398,9 @@ class SsapiController extends Controller {
 			var page_length = 6;
 			var mysqldb = new Mysqldb({database: this.config.database});
 			var self = this;
-			var fields_str = 'goods_id,goods_img,goods_name,date_format(start_time+"", "%Y-%m-%d %H:%m:%S") as start_time,date_format(end_time+"", "%Y-%m-%d %H:%m:%S") as end_time,origin_price,zk_price,click_url';
-			fields_str += temp_data.type=='1' ? '':',goods_intro';
-			if(mysqldb.query(`SELECT ${fields_str} FROM collect WHERE user_id="${temp_user_id}"${on_overdue_quan==1?"":' and quan_end_time>="'+Mysqldb.getDatetime()+'"'} ORDER BY ${temp_query.sort_by==1?'start_time asc':'collect_time desc'} LIMIT ${(temp_page-1)*page_length}, ${page_length}`, (e,r) =>{
+			var fields_str = 'goods_id,goods_img,goods_name,date_format(start_time+"", "%Y-%m-%d %H:%i:%S") as start_time,date_format(end_time+"", "%Y-%m-%d %H:%i:%S") as end_time,origin_price,zk_price,click_url';
+			fields_str += temp_query.type=='1' ? ',sold_num':',goods_intro,volume';
+			if(mysqldb.query(`SELECT ${fields_str} FROM ${temp_query.type=='1'?'tqg_collect':'jhs_collect'} WHERE user_id="${temp_user_id}"${on_overdue_quan==1?"":' and end_time>="'+Mysqldb.getDatetime()+'"'} ORDER BY ${temp_query.sort_by==1?'start_time asc':'collect_time desc'} LIMIT ${(temp_page-1)*page_length}, ${page_length}`, (e,r) =>{
 				if(e){
 					self.resp({st: 999, msg:e});
 				}else{
@@ -422,7 +422,7 @@ class SsapiController extends Controller {
 			var page_length = 6;
 			var mysqldb = new Mysqldb({database: this.config.database});
 			var self = this;
-			var fields_str = 'goods_id,goods_img,goods_name,goods_intro,goods_sale_num,date_format(quan_end_time+"", "%Y-%m-%d %H:%m:%S") as quan_end_time,quan_price,price,quan_after_price,site_type';
+			var fields_str = 'goods_id,goods_img,goods_name,goods_intro,goods_sale_num,date_format(quan_end_time+"", "%Y-%m-%d %H:%i:%S") as quan_end_time,quan_price,price,quan_after_price,site_type';
 			if(mysqldb.query(`SELECT ${fields_str} FROM collect WHERE user_id="${temp_user_id}"${on_overdue_quan==1?"":' and quan_end_time>="'+Mysqldb.getDatetime()+'"'} ORDER BY ${temp_query.sort_by==1?'quan_end_time asc':'collect_time desc'} LIMIT ${(temp_page-1)*page_length}, ${page_length}`, (e,r) =>{
 				if(e){
 					self.resp({st: 999, msg:e});
@@ -442,9 +442,9 @@ class SsapiController extends Controller {
 			var temp_user_id = temp_data.user_id;
 			var mysqldb = new Mysqldb({database: this.config.database});
 			var self = this;
-			var fields_str = 'goods_id,goods_img,goods_name,date_format(start_time+"", "%Y-%m-%d %H:%m:%S") as start_time,date_format(end_time+"", "%Y-%m-%d %H:%m:%S") as end_time,origin_price,zk_price,click_url';
-			fields_str += temp_data.type=='1' ? '':',goods_intro';
-			if(mysqldb.query(`SELECT ${fields_str} FROM ${temp_data.type=='1'?'tqg_collect':'jhs_collect'} WHERE user_id="${temp_user_id}" ORDER BY ${temp_query.sort_by==1?'start_time asc':'collect_time desc'} LIMIT ${temp_data.data_length},1`, (e,new_row) =>{
+			var fields_str = 'goods_id,goods_img,goods_name,date_format(start_time+"", "%Y-%m-%d %H:%i:%S") as start_time,date_format(end_time+"", "%Y-%m-%d %H:%i:%S") as end_time,origin_price,zk_price,click_url';
+			fields_str += temp_data.type=='1' ? ',sold_num':',goods_intro,volume';
+			if(mysqldb.query(`SELECT ${fields_str} FROM ${temp_data.type=='1'?'tqg_collect':'jhs_collect'} WHERE user_id="${temp_user_id}" ORDER BY ${temp_data.sort_by==1?'start_time asc':'collect_time desc'} LIMIT ${temp_data.data_length},1`, (e,new_row) =>{
 				if(e){
 					self.resp({st: 999, msg:e});
 				}else{
@@ -471,8 +471,8 @@ class SsapiController extends Controller {
 			var temp_user_id = temp_data.user_id;
 			var mysqldb = new Mysqldb({database: this.config.database});
 			var self = this;
-			var fields_str = 'goods_id,goods_img,goods_name,goods_intro,goods_sale_num,date_format(quan_end_time+"", "%Y-%m-%d %H:%m:%S") as quan_end_time,quan_price,price,quan_after_price,site_type';
-			if(mysqldb.query(`SELECT ${fields_str} FROM collect WHERE user_id="${temp_user_id}" ORDER BY ${temp_query.sort_by==1?'quan_end_time asc':'collect_time desc'} LIMIT ${temp_data.data_length},1`, (e,new_row) =>{
+			var fields_str = 'goods_id,goods_img,goods_name,goods_intro,goods_sale_num,date_format(quan_end_time+"", "%Y-%m-%d %H:%i:%S") as quan_end_time,quan_price,price,quan_after_price,site_type';
+			if(mysqldb.query(`SELECT ${fields_str} FROM collect WHERE user_id="${temp_user_id}" ORDER BY ${temp_data.sort_by==1?'quan_end_time asc':'collect_time desc'} LIMIT ${temp_data.data_length},1`, (e,new_row) =>{
 				if(e){
 					self.resp({st: 999, msg:e});
 				}else{
@@ -655,7 +655,7 @@ class SsapiController extends Controller {
 			var page_length = 6;
 			var mysqldb = new Mysqldb({database: this.config.database});
 			var self = this;
-			var fields_str = 'goods_id,goods_img,goods_name,goods_intro,goods_sale_num,date_format(quan_end_time+"", "%Y-%m-%d %H:%m:%S") as quan_end_time,quan_price,price,quan_after_price,site_type,date_format(record_time+"", "%Y-%m-%d %H:%m:%S") as record_time';
+			var fields_str = 'goods_id,goods_img,goods_name,goods_intro,goods_sale_num,date_format(quan_end_time+"", "%Y-%m-%d %H:%i:%S") as quan_end_time,quan_price,price,quan_after_price,site_type,date_format(record_time+"", "%Y-%m-%d %H:%i:%S") as record_time';
 			if(mysqldb.query(`SELECT ${fields_str} FROM quan_record WHERE user_id="${temp_user_id}"${on_overdue_quan==1?"":' and quan_end_time>="'+Mysqldb.getDatetime()+'"'} ORDER BY ${temp_query.sort_by==1?'quan_end_time asc':'record_time desc'} LIMIT ${(temp_page-1)*page_length}, ${page_length}`, (e,r) =>{
 				if(e){
 					self.resp({st: 999, msg:e});
@@ -675,7 +675,7 @@ class SsapiController extends Controller {
 			var temp_user_id = temp_data.user_id;
 			var mysqldb = new Mysqldb({database: this.config.database});
 			var self = this;
-			var fields_str = 'goods_id,goods_img,goods_name,goods_intro,goods_sale_num,date_format(quan_end_time+"", "%Y-%m-%d %H:%m:%S") as quan_end_time,quan_price,price,quan_after_price,site_type,date_format(record_time+"", "%Y-%m-%d %H:%m:%S") as record_time';
+			var fields_str = 'goods_id,goods_img,goods_name,goods_intro,goods_sale_num,date_format(quan_end_time+"", "%Y-%m-%d %H:%i:%S") as quan_end_time,quan_price,price,quan_after_price,site_type,date_format(record_time+"", "%Y-%m-%d %H:%i:%S") as record_time';
 			if(mysqldb.query(`SELECT ${fields_str} FROM quan_record WHERE user_id="${temp_user_id}" ORDER BY record_time desc LIMIT ${temp_data.data_length},1`, (e,new_row) =>{
 				if(e){
 					self.resp({st: 999, msg:e});
