@@ -120,7 +120,7 @@ class SsapiController extends Controller {
 			}
 			t_sign_str += key+temp_item;
 			//注：这里传递timestamp或中文要用encodeURI编码
-			if(key == 'text' || key == 'start_time' || key == 'end_time' || key == 'timestamp'){
+			if(key == 'text' || key == 'start_time' || key == 'param_top_item_query' || key == 'end_time' || key == 'timestamp'){
 				temp_item = encodeURI(temp_item);
 			}
 			//注：url中有特殊字符串
@@ -177,7 +177,6 @@ class SsapiController extends Controller {
 	}
 	aljhs(){
 		var temp_req = this.req.query;
-		var { start_time, end_time } = temp_req;
 		var t_pid = this.config.pid;
 		if(t_pid){
 			var self = this;
@@ -188,14 +187,15 @@ class SsapiController extends Controller {
 					pid: t_pid
 				}
 			}
-			if(temp_req.page_no) params.current_page = temp_req.page_no;
-			if(temp_req.page_size) params.page_size = temp_req.page_size;
+			if(temp_req.page_no) params.param_top_item_query.current_page = temp_req.page_no;
+			if(temp_req.page_size) params.param_top_item_query.page_size = temp_req.page_size;
+			if(temp_req.search_val) params.param_top_item_query.word = temp_req.search_val;
 			this.tbQuery(params, (e, data) => {
 				if(!e && data){
 					try{
 						data = JSON.parse(data);
 						if(!data.error_response && data.result && data.result.model_list){
-							self.resp(data.result.model_list);
+							self.resp(data.result);
 						}else{
 							self.resp({st: 999, msg:data.error_response.sub_msg||data.error_response.msg||''});
 						}
