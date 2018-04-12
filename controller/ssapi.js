@@ -32,41 +32,127 @@ class SsapiController extends Controller {
 			self.resp({type:'text/plain',data:'重置失败'});
 		}
 	}
-	getQuan(){
+	addSearchHistory(){
 		var temp_query = this.req.query;
-		var {goods_id,goods_name,quan_id,on_priority_tw,goods_img,sign,timenow,click_url} = temp_query;
-		if((goods_id && quan_id || click_url) && sign){
-			var temp_data = {
-				goods_name: goods_name,
-				on_priority_tw: on_priority_tw,
-				goods_img: encodeURIComponent(goods_img)
-			}
-			if(goods_id)	temp_data.goods_id = goods_id;
-			if(quan_id)	temp_data.quan_id = quan_id;
-			if(click_url)	temp_data.click_url = encodeURIComponent(click_url);
+		var mysqldb = new Mysqldb({database: this.config.database});
+		var self = this;
 
-			var str_sign = '';
-			Object.keys(temp_data).sort().forEach(item => {
-				str_sign += temp_data[item]+item;
-			})
-			var md5_crypto = crypto.createHash('sha1');
-			md5_crypto.update((str_sign+timenow).split("1").sort().join('8'),'utf8');
-			if(md5_crypto.digest('hex') == sign){
-				var t_config = this.config;
-				var self = this;
-				var goods_quan_url = click_url?click_url:`https://uland.taobao.com/coupon/edetail?activityId=${quan_id}&pid=${t_config.pid}&itemId=${goods_id}`
-				if(on_priority_tw === 0){
-					self.resp({url: goods_quan_url});
-				}else{
-					this.createTpwd(goods_name, goods_quan_url, goods_img, (err, res) => {
-						self.resp(!err&&res ? {model: res} : {url: goods_quan_url});
-					})
-				}
+		if(temp_query.user_id&&temp_query.word&&mysqldb.query(`insert into search_history (user_id,word,time) values ("${temp_query.user_id}","${decodeURIComponent(temp_query.word)}","${Mysqldb.getDatetime()}") on duplicate key update time=values(time);`,(e, r) => {
+			if(!e){
+				self.resp({st:200});
 			}else{
-				this.resp({st: 999, msg:'illegal request'});
+				self.resp({st:999});
+			}
+		}) === false){
+			self.resp({st:999});
+		}
+	}
+	getHotSearch(){
+		var t_config = this.config;
+		if(t_config&&t_config.on_hotSearch){
+			var self = this;
+			var mysqldb = new Mysqldb({database: this.config.database});
+			if(mysqldb.query('SELECT word,COUNT(word) AS count FROM `search_history` GROUP BY word ORDER BY count desc LIMIT 0,8',(e, r) => {
+				if(!e){
+					self.resp({st:200,data: r});
+				}else{
+					self.resp({st:999});
+				}
+			}) === false){
+				self.resp({st:999});
 			}
 		}else{
-			this.resp({st: 999, msg:'params wrong'});
+			this.resp({st:200});
+		}
+	}
+	getSearchHistory(){
+		var temp_user_id = this.req.query.user_id;
+		var mysqldb = new Mysqldb({database: this.config.database});
+		var self = this;
+
+		if(temp_user_id&&mysqldb.query('select word from search_history where user_id="'+temp_user_id+'" order by time desc',(e, r) => {
+			if(!e){
+				var res = [];
+				r.forEach((item) => {
+					res.push(item.word);
+				})
+				self.resp({st:200,data: res});
+			}else{
+				self.resp({st:999});
+			}
+		}) === false){
+			self.resp({st:999});
+		}
+	}
+	delSearchHistory(){
+		var temp_query = this.req.query;
+		var mysqldb = new Mysqldb({database: this.config.database});
+		var self = this;
+
+		if(temp_query.user_id&&temp_query.word&&mysqldb.delete('search_history', 'user_id="'+temp_query.user_id+'" and word="'+decodeURIComponent(temp_query.word)+'"',(e, r) => {
+			if(!e){
+				self.resp({st:200,msg:'delete seccess'});
+			}else{
+				self.resp({st:999});
+			}
+		}) === false){
+			self.resp({st:999});
+		}
+	}
+	cleanSearchHistory(){
+		var temp_user_id = this.req.query.user_id;
+		var mysqldb = new Mysqldb({database: this.config.database});
+		var self = this;
+
+		if(temp_user_id&&mysqldb.delete('search_history', 'user_id="'+temp_user_id+'"',(e, r) => {
+			if(!e){
+				self.resp({st:200,msg:'clean seccess'});
+			}else{
+				self.resp({st:999});
+			}
+		}) === false){
+			self.resp({st:999});
+		}
+	}
+	getQuan(){
+		var t_config = this.config;
+		if(t_config&&t_config.on_lingquan){
+			var temp_query = this.req.query;
+			var {goods_id,goods_name,quan_id,on_priority_tw,goods_img,sign,timenow,click_url} = temp_query;
+			if((goods_id && quan_id || click_url) && sign){
+				var temp_data = {
+					goods_name: goods_name,
+					on_priority_tw: on_priority_tw,
+					goods_img: encodeURIComponent(goods_img)
+				}
+				if(goods_id)	temp_data.goods_id = goods_id;
+				if(quan_id)	temp_data.quan_id = quan_id;
+				if(click_url)	temp_data.click_url = encodeURIComponent(click_url);
+
+				var str_sign = '';
+				Object.keys(temp_data).sort().forEach(item => {
+					str_sign += temp_data[item]+item;
+				})
+				var md5_crypto = crypto.createHash('sha1');
+				md5_crypto.update((str_sign+timenow).split("1").sort().join('8'),'utf8');
+				if(md5_crypto.digest('hex') == sign){
+					var self = this;
+					var goods_quan_url = click_url?click_url:`https://uland.taobao.com/coupon/edetail?activityId=${quan_id}&pid=${t_config.pid}&itemId=${goods_id}`
+					if(on_priority_tw === 0){
+						self.resp({url: goods_quan_url});
+					}else{
+						this.createTpwd(goods_name, goods_quan_url, goods_img, (err, res) => {
+							self.resp(!err&&res ? {model: res} : {url: goods_quan_url});
+						})
+					}
+				}else{
+					this.resp({st: 999, msg:'illegal request'});
+				}
+			}else{
+				this.resp({st: 999, msg:'params wrong'});
+			}
+		}else{
+			this.resp({st: 200});
 		}
 	}
 	createTpwd(tpwd_text, tpwd_url, logo_img, callback){

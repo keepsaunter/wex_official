@@ -60,7 +60,9 @@ mysqldb.select('config', (err, res) => {
 			ss_logo: temp_conf.ss_logo,
 			al_appkey: temp_conf.alAppkey,
 			al_app_secret: temp_conf.alAppSecret,
-			pid: temp_conf.pid
+			pid: temp_conf.pid,
+			on_lingquan: temp_conf.on_lingquan,
+			on_hotSearch: temp_conf.on_hotSearch
 		}
 	}
 })
