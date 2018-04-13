@@ -10,7 +10,8 @@ class SsapiController extends Controller {
 	}
 	slideshow(){
 		var self = this;
-		(new Mysqldb({database: self.config.database})).select('slideshow', 'title,url,image', 'status=1', function(e, r, f){
+		var date_now = Mysqldb.getDatetime();
+		(new Mysqldb({database: self.config.database})).select('slideshow', 'title,url,image,type', 'status=1 and start_time<="'+date_now+'" and end_time>"'+date_now+'"', function(e, r, f){
 			if(!e){
 				self.resp(r);
 			}else{
@@ -30,6 +31,19 @@ class SsapiController extends Controller {
 			}
 		}) === false){
 			self.resp({type:'text/plain',data:'重置失败'});
+		}
+	}
+	getLogs(){
+		var mysqldb = new Mysqldb({database: this.config.database});
+		var self = this;
+		if(mysqldb.query('select content, date_format(u_date+"", "%Y-%m-%d") as u_date from update_log where status=1 order by u_date desc;',(e, r) => {
+			if(!e){
+				self.resp({st:200, data:r});
+			}else{
+				self.resp({st:999});
+			}
+		}) === false){
+			self.resp({st:999});
 		}
 	}
 	addSearchHistory(){
@@ -392,7 +406,7 @@ class SsapiController extends Controller {
 					if(temp_user_id){
 						var insert_str = '';
 						res.map((item, index, arr) => {
-							if(item.value == null||item.status==1){
+							if(item.value == null||item.status==1||item.status==0){
 								if(item.value == null){
 									insert_str += ',("'+temp_user_id+'",'+item.id+','+item.default_val+')';
 								}
