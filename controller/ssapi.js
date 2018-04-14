@@ -33,6 +33,19 @@ class SsapiController extends Controller {
 			self.resp({type:'text/plain',data:'重置失败'});
 		}
 	}
+	getBroadcast(){
+		var mysqldb = new Mysqldb({database: this.config.database});
+		var self = this;
+		if(mysqldb.query('select content, date_format(b_date+"", "%Y-%m-%d") as b_date from broadcast where status=1 order by b_date desc;',(e, r) => {
+			if(!e){
+				self.resp({st:200, data:r});
+			}else{
+				self.resp({st:999});
+			}
+		}) === false){
+			self.resp({st:999});
+		}
+	}
 	getLogs(){
 		var mysqldb = new Mysqldb({database: this.config.database});
 		var self = this;
