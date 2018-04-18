@@ -33,6 +33,11 @@ class SsapiController extends Controller {
 			self.resp({type:'text/plain',data:'重置失败'});
 		}
 	}
+	saveSearchHistory(user_id, word, time, callback=()=>{}){
+		var mysqldb = new Mysqldb({database: this.config.bigdata_base});
+		var self = this;
+		mysqldb.insert('search_history', {user_id:user_id,word:word,time:time}, callback)
+	}
 	getBroadcast(){
 		var mysqldb = new Mysqldb({database: this.config.database});
 		var self = this;
@@ -64,9 +69,13 @@ class SsapiController extends Controller {
 		var mysqldb = new Mysqldb({database: this.config.database});
 		var self = this;
 
-		if(temp_query.user_id&&temp_query.word&&mysqldb.query(`insert into search_history (user_id,word,time) values ("${temp_query.user_id}","${decodeURIComponent(temp_query.word)}","${Mysqldb.getDatetime()}") on duplicate key update time=values(time);`,(e, r) => {
+		var user_id = temp_query.user_id;
+		var word = decodeURIComponent(temp_query.word);
+		var time = Mysqldb.getDatetime();
+		if(temp_query.user_id&&temp_query.word&&mysqldb.query(`insert into search_history (user_id,word,time) values ("${user_id}","${word}","${time}") on duplicate key update time=values(time);`,(e, r) => {
 			if(!e){
 				self.resp({st:200});
+				self.saveSearchHistory(user_id, word, time);
 			}else{
 				self.resp({st:999});
 			}
@@ -78,8 +87,8 @@ class SsapiController extends Controller {
 		var t_config = this.config;
 		if(t_config&&t_config.on_hotSearch){
 			var self = this;
-			var mysqldb = new Mysqldb({database: this.config.database});
-			if(mysqldb.query('SELECT word,COUNT(word) AS count FROM `search_history` GROUP BY word ORDER BY count desc LIMIT 0,8',(e, r) => {
+			var mysqldb = new Mysqldb({database: t_config.bigdata_base});
+			if(mysqldb.query('SELECT word,COUNT(word) AS count FROM search_history GROUP BY word ORDER BY count desc LIMIT 0,8',(e, r) => {
 				if(!e){
 					self.resp({st:200,data: r});
 				}else{

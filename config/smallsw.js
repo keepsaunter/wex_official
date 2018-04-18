@@ -1,3 +1,4 @@
 export default {
-	'database': 'bgyhq'
+	'database': 'bgyhq',
+	'bigdata_base': 'bgyhqdata'
 }

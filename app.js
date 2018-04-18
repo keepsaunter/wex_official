@@ -54,6 +54,7 @@ mysqldb.select('config', (err, res) => {
 		var temp_conf = res[0];
 		global.ssconfig = {
 			database: database_name,
+			bigdata_base: SsConfig.bigdata_base,
 			app_id: temp_conf.smAppId,
 			app_secret: temp_conf.smAppSecret,
 			day_score: temp_conf.dayScore,
