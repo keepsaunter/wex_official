@@ -8,6 +8,21 @@ class SsapiController extends Controller {
 		super(req, res, next);
 		this.config = global.ssconfig;
 	}
+	getVersionType(){
+		var version_str = this.req.query.v;
+		if(version_str){
+			var t_config = this.config;
+			if(version_str === t_config.testing_version){
+				this.resp({data:0});
+			}else if(version_str === t_config.checking_version){
+				this.resp({data:1});
+			}else{
+				this.resp({data:2});
+			}
+		}else{
+			this.resp({data:2});
+		}
+	}
 	slideshow(){
 		var self = this;
 		var date_now = Mysqldb.getDatetime();

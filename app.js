@@ -62,6 +62,8 @@ mysqldb.select('config', (err, res) => {
 			al_appkey: temp_conf.alAppkey,
 			al_app_secret: temp_conf.alAppSecret,
 			pid: temp_conf.pid,
+			testing_version: temp_conf.testing_version,
+			checking_version: temp_conf.checking_version,
 			on_lingquan: temp_conf.on_lingquan,
 			on_hotSearch: temp_conf.on_hotSearch
 		}
