@@ -919,7 +919,8 @@ class SsapiController extends Controller {
 			mysqldb.select('user', 'score,last_sign_time',`user_id="${temp_user_id}"`, (e,origin_data)=>{
 				if(origin_data.length){
 					var temp_sign_time = origin_data[0]['last_sign_time'];
-					if(temp_sign_time==='' || new Date() - new Date(temp_sign_time.substr(0,10)) > 86400000){
+					temp_sign_time = temp_sign_time ? new Date(temp_sign_time.substr(0,10)) : 0;
+					if(new Date() - temp_sign_time > 86400000){
 						var temp_score = parseInt(origin_data[0]['score']) + parseInt(this.config.day_score);
 						var new_sign_time = Mysqldb.getDatetime();
 						mysqldb.update('user', {score:temp_score,last_sign_time: new_sign_time}, '', `user_id="${temp_user_id}"`,(e,r) => {
