@@ -12,12 +12,16 @@ class SsapiController extends Controller {
 		var version_str = this.req.query.v;
 		if(version_str){
 			var t_config = this.config;
-			if(version_str === t_config.testing_version){
-				this.resp({data:0});
-			}else if(version_str === t_config.checking_version){
-				this.resp({data:1});
+			if(t_config.open_serve != 0){
+				if(version_str === t_config.checking_version){
+					this.resp({data:1});
+				}else if(version_str === t_config.testing_version){
+					this.resp({data:0});
+				}else{
+					this.resp({data:2});
+				}
 			}else{
-				this.resp({data:2});
+				this.resp({data:1});
 			}
 		}else{
 			this.resp({data:2});
@@ -963,40 +967,44 @@ class SsapiController extends Controller {
 	    	var self = this;
 	    	new MyHttp({url:`https://api.weixin.qq.com/sns/jscode2session?appid=${t_config.app_id}&secret=${t_config.app_secret}&js_code=${t_code}&grant_type=authorization_code`}).get(
 				(e, data) => {
-					data = JSON.parse(data);
-					if(!e && !data.errcode && data.openid){
-						var temp_openid = data.openid;
-						mysqldb.select('user', 'user_id,score,last_sign_time',`openid="${temp_openid}"`, (e,origin_data) => {
-				    	if(!e){
-				    		if(origin_data.length){
-				    			if(mysqldb.update('user', temp_user_info, '', `openid="${temp_openid}"`,(e,r) => {
-				    				if(e){
-				    					self.resp({st: 999, msg:e});
-				    				}else{
-				    					var data_select = origin_data[0];
-				    					self.resp({st: 200, data: {user_id: data_select.user_id,score: data_select.score, last_sign_time: data_select.last_sign_time}});
-				    				}
-				    			}) == false){
-				    				self.resp({st: 999});
-				    			}
-				    		}else{
-				    			temp_user_info.openid = temp_openid;
-				    			temp_user_info.register_time = temp_user_info.last_login_time;
-				    			temp_user_info.user_id = createRandomChart(8)+(Date.now()+'').slice(-10);
-				    			if(mysqldb.insert('user', temp_user_info, (e,r) => {
-				    				if(e){
-				    					self.resp({st: 999, msg:e});
-				    				}else{
-				    					self.resp({st: 200, data: {user_id: temp_user_info.user_id}});
-				    				}
-				    			}) == false){
-				    				self.resp({st: 999});
-				    			}
-				    		}
-				    	}else{
-								self.resp({st: 999, msg:e});
-							}
-				    })
+					try{
+						data = JSON.parse(data);
+						if(!e && !data.errcode && data.openid){
+							var temp_openid = data.openid;
+							mysqldb.select('user', 'user_id,score,last_sign_time',`openid="${temp_openid}"`, (e,origin_data) => {
+					    	if(!e){
+					    		if(origin_data.length){
+					    			if(mysqldb.update('user', temp_user_info, '', `openid="${temp_openid}"`,(e,r) => {
+					    				if(e){
+					    					self.resp({st: 999, msg:e});
+					    				}else{
+					    					var data_select = origin_data[0];
+					    					self.resp({st: 200, data: {user_id: data_select.user_id,score: data_select.score, last_sign_time: data_select.last_sign_time}});
+					    				}
+					    			}) == false){
+					    				self.resp({st: 999});
+					    			}
+					    		}else{
+					    			temp_user_info.openid = temp_openid;
+					    			temp_user_info.register_time = temp_user_info.last_login_time;
+					    			temp_user_info.user_id = createRandomChart(8)+(Date.now()+'').slice(-10);
+					    			if(mysqldb.insert('user', temp_user_info, (e,r) => {
+					    				if(e){
+					    					self.resp({st: 999, msg:e});
+					    				}else{
+					    					self.resp({st: 200, data: {user_id: temp_user_info.user_id}});
+					    				}
+					    			}) == false){
+					    				self.resp({st: 999});
+					    			}
+					    		}
+					    	}else{
+									self.resp({st: 999, msg:e});
+								}
+					    })
+						}
+					}catch(e){
+						self.resp({st: 999, msg:data});
 					}
 				})
 	    }else{
