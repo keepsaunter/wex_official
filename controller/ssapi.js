@@ -10,22 +10,21 @@ class SsapiController extends Controller {
 	}
 	getVersionType(){
 		var version_str = this.req.query.v;
+		var res = {v: 2};
+		var t_config = this.config;
 		if(version_str){
-			var t_config = this.config;
 			if(t_config.open_serve != 0){
 				if(version_str === t_config.checking_version){
-					this.resp({data:1});
+					res.v = 1;
 				}else if(version_str === t_config.testing_version){
-					this.resp({data:0});
-				}else{
-					this.resp({data:2});
+					res.v = 0;
 				}
 			}else{
-				this.resp({data:1});
+				res.v = 1;
 			}
-		}else{
-			this.resp({data:2});
 		}
+		res.search_api = t_config.search_api;
+		this.resp({data: res});
 	}
 	slideshow(){
 		var self = this;

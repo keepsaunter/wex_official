@@ -65,6 +65,7 @@ mysqldb.select('config', (err, res) => {
 			testing_version: temp_conf.testing_version,
 			checking_version: temp_conf.checking_version,
 			on_lingquan: temp_conf.on_lingquan,
+			search_api: temp_conf.search_api,
 			on_hotSearch: temp_conf.on_hotSearch,
 			open_serve: temp_conf.open_serve
 		}
