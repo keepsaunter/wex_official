@@ -23,8 +23,12 @@ class SsapiController extends Controller {
 				res.v = 1;
 			}
 		}
-		res.search_api = t_config.search_api;
-		this.resp({data: res});
+		if(version_str == '1.5.8'){
+			this.resp({data: res.v});
+		}else{
+			res.search_api = t_config.search_api;
+			this.resp({data: res});
+		}
 	}
 	slideshow(){
 		var self = this;
