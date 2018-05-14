@@ -393,6 +393,8 @@ class SsapiController extends Controller {
 			var price_start = temp_req.price_start;
 			var price_end = temp_req.price_end;
 			var params = {};
+			if(page!=undefined) params.page_no = page;
+			if(page_size!=undefined) params.page_size = page_size;
 			var query_str = price_start!=undefined?params.start_price=price_start:'';
 			query_str += price_end!=undefined?params.end_price=price_end:'';
 			query_str += q!=undefined?params.q=decodeURIComponent(q):'';
