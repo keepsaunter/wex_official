@@ -23,7 +23,12 @@ user_router.use(function(req, res, next){
 	
 	//对于缺少控制器或操作名的请求做处理(替换成全局配置的名称)
 	var default_path = global.config.default_url_name;
-	controll_paths?(controll_paths[1]?(controll_paths[2]?'':controll_paths[2]=default_path):controll_paths[1]=controll_paths[2]=default_path):controll_paths[1]=controll_paths[2]=default_path;
+	if(controll_paths){
+		controll_paths[1]?(controll_paths[2]?'':controll_paths[2]=default_path):controll_paths[1]=controll_paths[2]=default_path
+	}else{
+		controll_paths = {};
+		controll_paths[1]=controll_paths[2]=default_path;
+	}
 
 	/*用eval来将字符串作为对象名调用；
 	  可以用(function(funname){return funname();})(name)的方式实现；
