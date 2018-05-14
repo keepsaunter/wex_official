@@ -418,6 +418,16 @@ class SsapiController extends Controller {
 					try{
 						data = JSON.parse(data);
 						if(!data.error_response && data){
+							var temp_quan = '';
+							var temp_goods = data.result_list
+							temp_goods = temp_goods.map(item => {
+								temp_quan = item.coupon_info||'';
+								temp_quan = temp_quan.slice(temp_quan.indexOf('减')+1, -1)||0;
+								item.quan_price = temp_quan;
+								item.quan_after_price = (item.zk_final_price * 10 - temp_quan * 10) / 10;
+								return item;
+							})
+							data.result_list = temp_goods;
 							self.resp(data);
 						}else{
 							self.resp({st: 999, msg:data.error_response.sub_msg||data.error_response.msg||''});
