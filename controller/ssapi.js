@@ -444,7 +444,7 @@ class SsapiController extends Controller {
 								temp_quan = item.coupon_info||'';
 								temp_quan = temp_quan.slice(temp_quan.indexOf('减')+1, -1)||0;
 								item.quan_price = temp_quan;
-								item.quan_after_price = (item.zk_final_price * 10 - temp_quan * 10) / 10;
+								item.quan_after_price = (item.zk_final_price * 100 - temp_quan * 100) / 100;
 								return item;
 							})
 							data.result_list = temp_goods;
