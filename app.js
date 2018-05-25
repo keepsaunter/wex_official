@@ -67,6 +67,7 @@ mysqldb.select('config', (err, res) => {
 			on_lingquan: temp_conf.on_lingquan,
 			search_api: temp_conf.search_api,
 			on_hotSearch: temp_conf.on_hotSearch,
+			on_more_detail: temp_conf.on_more_detail,
 			open_serve: temp_conf.open_serve
 		}
 	}

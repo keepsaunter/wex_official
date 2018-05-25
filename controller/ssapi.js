@@ -10,7 +10,7 @@ class SsapiController extends Controller {
 	}
 	getVersionType(){
 		var version_str = this.req.query.v;
-		var res = {v: 2};
+		var res = {v: 2};//0:测试中;1:审核中;2:正式环境
 		var t_config = this.config;
 		if(version_str){
 			if(t_config.open_serve != 0){
@@ -27,7 +27,27 @@ class SsapiController extends Controller {
 			this.resp({data: res.v});
 		}else{
 			res.search_api = t_config.search_api;
+			res.on_more_detail = t_config.on_more_detail;
 			this.resp({data: res});
+		}
+		var t_req_header = this.req.headers;
+		if(res.v != 0 && t_req_header){
+			var t_ip = t_req_header['x-real-ip'];
+			if(!t_ip){
+				var t_xforwarded_for = t_req_header['x-forwarded-for'];
+				if(t_xforwarded_for){
+					t_ip = t_xforwarded_for.split(',')[0]||'';
+				}
+			}
+			var t_user_agent = t_req_header['user-agent'];
+			if(t_user_agent){
+				t_user_agent = t_user_agent.substring(t_user_agent.indexOf('(')+1,t_user_agent.indexOf(';'));
+				t_user_agent = t_user_agent.indexOf('Linux')>-1?1:t_user_agent.indexOf('iPhone')>-1?2:t_user_agent.indexOf('iPad')>-1?3:t_user_agent.indexOf('Windows')>-1?4:t_user_agent.indexOf('Macintosh')>-1?5:6;
+			}
+			if(t_ip||t_user_agent){
+				var mysqldb = new Mysqldb({database: this.config.bigdata_base});
+				mysqldb.insert('ip_info', {ip:t_ip||'',platform:t_user_agent,time:Mysqldb.getDatetime()})
+			}
 		}
 	}
 	slideshow(){
