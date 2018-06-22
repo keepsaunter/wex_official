@@ -50,7 +50,7 @@ new Wechat();
 var database_name = SsConfig.database;
 var mysqldb = new Mysqldb({database: database_name});
 mysqldb.select('config', (err, res) => {
-	if(res.length){
+	if(res && res.length){
 		var temp_conf = res[0];
 		global.ssconfig = {
 			database: database_name,
@@ -70,6 +70,8 @@ mysqldb.select('config', (err, res) => {
 			on_more_detail: temp_conf.on_more_detail,
 			open_serve: temp_conf.open_serve
 		}
+	}else{
+		console.error('err: ' + err);
 	}
 })
 
