@@ -61,6 +61,16 @@ class SsapiController extends Controller {
 			}
 		});
 	}
+	getGuideImgs(){
+		var self = this;
+		(new Mysqldb({database: self.config.database})).select('guide_img', 'title,link', 'status=1', function(e, r, f){
+			if(!e){
+				self.resp(r);
+			}else{
+				self.resp([]);
+			}
+		});
+	}
 	resetAppkey(){
 		var self = this;
 		var mysqldb = new Mysqldb({database: this.config.database});
